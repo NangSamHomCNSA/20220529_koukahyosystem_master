@@ -25,6 +25,7 @@ namespace koukahyosystem.Controllers
         string roundingType = "";
         Models.ShukeiHyouModel shukeiMdl = new Models.ShukeiHyouModel();
         Models.ShukeiHyouModel kanrishukeiMdl = new Models.ShukeiHyouModel();
+        Models.kanrishukeihyo kanri = new Models.kanrishukeihyo();
         // GET: ShukeiHyou
         public ActionResult ShukeiHyou()
         {
@@ -65,6 +66,7 @@ namespace koukahyosystem.Controllers
         [HttpPost]
          public ActionResult ShukeiHyou(Models.ShukeiHyouModel shukei)
         {
+            string loginid = "";
             if (Session["LoginName"] == null)
             {
                 return RedirectToRoute("Default", new { controller = "Default", action = "Login" });
@@ -76,7 +78,10 @@ namespace koukahyosystem.Controllers
             {
                 name = Session["LoginName"].ToString();
             }
-
+            if (Session["LoginCode"] != null)
+            {
+                loginid = Session["LoginCode"].ToString();
+            }
             if (Request["year_btn"] == "display")
             {
                 if (shukei.cur_year != null)
@@ -111,22 +116,80 @@ namespace koukahyosystem.Controllers
                 if (shukei.ShukeiList != null)
                 {
                     Year = shukei.cur_year;
-                    string sql = "";
+                    string update_sql = "";
+                    bool compare_data = false;
+                    kanrishukeiMdl.cur_year = shukei.cur_year;
+
                     foreach (var item in shukei.ShukeiList)
                     {
-                        if (item.jyouikouka != null && item.cKUBUN != null)
+                        if (item.cKUBUN != null)
                         {
-                            string jyouiVal = item.jyouikouka;
+                            string jyouiVal = item.txt_getdata;
                             string kubunVal = item.cKUBUN;
+                            string sql = "select nHAIFU from m_haifu where dNENDOU='" + Year + "' and cKUBUN='" + kubunVal + "' and cTYPE='04'";
+                            DataTable dt_nhaifu = new DataTable();
+                            string nhaifu = "";
+                            var selectsql = new SqlDataConnController();
+                            dt_nhaifu = selectsql.ReadData(sql);
+                            if (dt_nhaifu.Rows.Count > 0)
+                            {
+                                nhaifu = dt_nhaifu.Rows[0]["nHAIFU"].ToString();
+                                int di_nhaifu = Convert.ToInt32(nhaifu);
+                                string dhenkou = DateTime.Today.ToString();
+                                if (item.txt_getdata == null)
+                                {
+                                    jyouiVal = "";
+                                    string select_rjoui = "select * from r_jouikoka where dNENDOU = '" + Year + "' and cSHAIN='" + item.cSHAIN + "'";
+                                    DataTable dt_njoui = new DataTable();
+                                    var selectnjoui = new SqlDataConnController();
+                                    dt_njoui = selectnjoui.ReadData(select_rjoui);
+                                    if (dt_njoui.Rows.Count > 0)
+                                    {
+                                        update_sql += "update r_jouikoka set nJOUI='" + jyouiVal + "',cHYOUKASHA='" + loginid + "',dHENKOU='" + dhenkou + "' where dNENDOU = '" + Year + "' and  cSHAIN='" + item.cSHAIN + "';";
+                                    }
+                                    else
+                                    {
+                                        update_sql += "insert into r_jouikoka values ('" + Year + "','" + item.cSHAIN + "','" + jyouiVal + "','" + loginid + "',now());";
+                                    }
+                                }
+                                else
+                                {
+                                    int di_jyou = Convert.ToInt32(jyouiVal);
+                                    if (di_nhaifu >= di_jyou)
+                                    {
+                                        string njoui = Convert.ToString(di_jyou);
+                                        string select_rjoui = "select * from r_jouikoka where dNENDOU = '" + Year + "' and cSHAIN='" + item.cSHAIN + "'";
+                                        DataTable dt_njoui = new DataTable();
+                                        var selectnjoui = new SqlDataConnController();
+                                        dt_njoui = selectnjoui.ReadData(select_rjoui);
+                                        if (dt_njoui.Rows.Count > 0)
+                                        {
+                                            update_sql += "update r_jouikoka set nJOUI='" + njoui + "',cHYOUKASHA='" + loginid + "',dHENKOU='" + dhenkou + "' where dNENDOU = '" + Year + "' and  cSHAIN='" + item.cSHAIN + "';";
+                                        }
+                                        else
+                                        {
+                                            update_sql += "insert into r_jouikoka values ('" + Year + "','" + item.cSHAIN + "','" + njoui + "','" + loginid + "',now());";
+                                        }
+                                    }
+                                    else
+                                    {
+                                        compare_data = true;
+                                        TempData["com_msg"] = di_nhaifu + "点超えています。調整してください。";
+                                        //kanri.txt_jyoudata.BorderColor = ConsoleColor.Red;
+                                    }
+                                }
 
-                            sql += "update m_haifu set nHAIFU ='"+ jyouiVal + "' where dNENDOU = '"+ Year + "' and cKUBUN = '"+ kubunVal + "' and cTYPE ='04';"; 
+                            }
                         }
                     }
 
-                    if (sql != "")
+                    if (compare_data == false)
                     {
-                        var updateSql = new SqlDataConnController();
-                        bool returnval = updateSql.inputsql(sql);                       
+                        if (update_sql != "")
+                        {
+                            var updateSql = new SqlDataConnController();
+                            bool returnval = updateSql.inputsql(update_sql);
+                        }
                     }
                     ModelState.Clear();
                 }
@@ -189,6 +252,9 @@ namespace koukahyosystem.Controllers
         [HttpPost]
         public ActionResult KanrishaShukei(Models.ShukeiHyouModel kanrishukei)
         {
+            string loginid = "";
+
+            bool compare_data = false;
             if (Session["LoginName"] == null)
             {
                 return RedirectToRoute("Default", new { controller = "Default", action = "Login" });
@@ -200,13 +266,16 @@ namespace koukahyosystem.Controllers
             {
                 name = Session["LoginName"].ToString();
             }
-
+            if (Session["LoginCode"] != null)
+            {
+                loginid = Session["LoginCode"].ToString();
+            }
             if (Request["year_btn"] == "display")
             {
                 if (kanrishukei.cur_year != null)
                 {
                     string selecteyear = kanrishukei.cur_year;
-
+                    kanrishukei.cur_year = selecteyear;
                 }
                 ModelState.Clear();
             }
@@ -234,22 +303,82 @@ namespace koukahyosystem.Controllers
                 if (kanrishukei.KanriShukeiList != null)
                 {
                     Year = kanrishukei.cur_year;
-                    string sql = "";
+                    string update_sql = "";
+                    kanrishukeiMdl.cur_year = kanrishukei.cur_year;
+                    
                     foreach (var item in kanrishukei.KanriShukeiList)
                     {
-                        if (item.jyouikouka != null && item.cKUBUN != null)
+                        if (item.cKUBUN != null )
                         {
-                            string jyouiVal = item.jyouikouka;
+                            string jyouiVal = item.txt_jyoudata;
                             string kubunVal = item.cKUBUN;
 
-                            sql += "update m_haifu set nHAIFU ='" + jyouiVal + "' where dNENDOU = '" + Year + "' and cKUBUN = '" + kubunVal + "' and cTYPE ='04';";
+                            string sql = "select nHAIFU from m_haifu where dNENDOU='" + Year + "' and cKUBUN='" + kubunVal + "' and cTYPE='04'";
+                            DataTable dt_nhaifu = new DataTable();
+                            string nhaifu = "";
+                            var selectsql = new SqlDataConnController();
+                            dt_nhaifu = selectsql.ReadData(sql);
+                            if (dt_nhaifu.Rows.Count > 0)
+                            {
+                                nhaifu = dt_nhaifu.Rows[0]["nHAIFU"].ToString();
+                                int di_nhaifu = Convert.ToInt32(nhaifu);
+                                string dhenkou = DateTime.Today.ToString();
+                                
+                                if (item.txt_jyoudata == null)
+                                {
+                                    jyouiVal = "";
+                                    string select_rjoui = "select * from r_jouikoka where dNENDOU = '" + Year + "' and cSHAIN='" + item.cSHAIN + "'";
+                                    DataTable dt_njoui = new DataTable();
+                                    var selectnjoui = new SqlDataConnController();
+                                    dt_njoui = selectnjoui.ReadData(select_rjoui);
+                                    if (dt_njoui.Rows.Count > 0)
+                                    {
+                                        update_sql += "update r_jouikoka set nJOUI='" + jyouiVal + "',cHYOUKASHA='" + loginid + "',dHENKOU='" + dhenkou + "' where dNENDOU = '" + Year + "' and  cSHAIN='" + item.cSHAIN + "';";
+                                    }
+                                    else
+                                    {
+                                        update_sql += "insert into r_jouikoka values ('" + Year + "','" + item.cSHAIN + "','" + jyouiVal + "','" + loginid + "',now());";
+                                    }
+                                }
+                                else
+                                {
+                                    int di_jyou = Convert.ToInt32(jyouiVal);
+                                    if (di_nhaifu >= di_jyou)
+                                    {
+                                        string njoui = Convert.ToString(di_jyou);
+                                        string select_rjoui = "select * from r_jouikoka where dNENDOU = '" + Year + "' and cSHAIN='" + item.cSHAIN + "'";
+                                        DataTable dt_njoui = new DataTable();
+                                        var selectnjoui = new SqlDataConnController();
+                                        dt_njoui = selectnjoui.ReadData(select_rjoui);
+                                        if (dt_njoui.Rows.Count > 0)
+                                        {
+                                            update_sql += "update r_jouikoka set nJOUI='" + njoui + "',cHYOUKASHA='" + loginid + "',dHENKOU='" + dhenkou + "' where dNENDOU = '" + Year + "' and  cSHAIN='" + item.cSHAIN + "';";
+                                        }
+                                        else
+                                        {
+                                            update_sql += "insert into r_jouikoka values ('" + Year + "','" + item.cSHAIN + "','" + njoui + "','" + loginid + "',now());";
+                                        }
+                                    }
+                                    else
+                                    {
+                                        //compare_data = true;
+                                        //TempData["com_msg"] = di_nhaifu+ "点超えています。調整してください。";
+                                        
+                                        //break;
+                                    }
+                                }
+                                
+                            }
                         }
                     }
-
-                    if (sql != "")
+                    if (compare_data == false)
                     {
-                        var updateSql = new SqlDataConnController();
-                        bool returnval = updateSql.inputsql(sql);
+                        if (update_sql != "")
+                        {
+                            var updateSql = new SqlDataConnController();
+                            bool returnval = updateSql.inputsql(update_sql);
+                        }
+                        
                     }
                     ModelState.Clear();
                 }
@@ -267,7 +396,7 @@ namespace koukahyosystem.Controllers
             kanrishukei.fjyoicol = fjyoicol;
             return View(kanrishukei);
         }
-
+        
         public DataTable ShukeiData()
         {
             DataTable syukeidt = new DataTable();
@@ -390,7 +519,8 @@ namespace koukahyosystem.Controllers
                 sqlstr += " SELECT ";
                 sqlstr += " ms.cSHAIN as cSHAIN";
                 sqlstr += " , ms.sSHAIN as sSHAIN ";
-                sqlstr += " , ms.cKUBUN as cKUBUN";               
+                sqlstr += " , ms.cKUBUN as cKUBUN";
+                sqlstr += ",dtrjoui.nJOUI as njoui";//zee
                 /*sqlstr += " , ifnull(mf.nMARK, '') as mokuhyoten ";
                 sqlstr += " , ifnull(mshi.hyoukaten, '') as hyoukaten ";*/
                 sqlstr += " , ifnull(dt_3dan.total, '') as tokuten_kiso ";
@@ -455,6 +585,7 @@ namespace koukahyosystem.Controllers
                 //360度評価点
                 //sqlstr += "  LEFT JOIN(SELECT cKUBUN, (count(cKOUMOKU) * 5 * 4)as hyoukaten FROM m_shitsumon Where (fDELE IS NULL or fDELE = 0 ) AND dNENDOU='" + shitsumonYear+"' Group by cKUBUN ) mshi on mshi.cKUBUN = ms.cKUBUN ";
                 sqlstr += "  LEFT JOIN m_haifu mhai on mhai.cKUBUN = ms.cKUBUN and mhai.cTYPE = '04' ";
+                sqlstr += "LEFT JOIN (select rjou.cSHAIN,rjou.nJOUI from r_jouikoka rjou where dNENDOU='" + curYear + "' group by rjou.cSHAIN) dtrjoui on dtrjoui.cSHAIN=ms.cSHAIN ";//zee
                 sqlstr += "  Where ms.cHYOUKASHA ='"+ cShain + "'";
                 sqlstr += "  and mhai.dNENDOU =  '" + curYear + "'";
                 sqlstr += "  Order by ms.cSHAIN";
@@ -476,6 +607,7 @@ namespace koukahyosystem.Controllers
                 foreach (DataRow dr in dt.Rows)
                 {
                     string shain_kubun = dr["cKUBUN"].ToString();
+                    string shuseishain = dr["cSHAIN"].ToString();
                     DataRow infodr1 = syukeidt.NewRow();
                     DataRow infodr2 = syukeidt.NewRow();
                     infodr1["description"] = "得点";
@@ -528,7 +660,7 @@ namespace koukahyosystem.Controllers
                     int hyoukaManten = findhyouka();
 
                     infodr1["sSHAIN"] = dr["sSHAIN"].ToString();
-                   
+                    infodr2["cSHAIN"] = dr["cSHAIN"].ToString();
                     //基礎点数計算
                     if (kisotenVal != "" && dr["tokuten_kiso"].ToString() != "")
                     {
@@ -613,7 +745,36 @@ namespace koukahyosystem.Controllers
                         total += tensuu;
                         haifu_total += haihyouka;
                     }
-                    infodr2["情意考課入力"] = dr["jyouikouka"].ToString();
+
+                    //情意考課
+                    #region
+                    string year_data = "";
+                    year_data += "select nJOUI from r_jouikoka where cSHAIN='" + shuseishain + "' and dNENDOU='" + curYear + "'";
+                    var readyear = new SqlDataConnController();
+                    DataTable dtyeardata = readyear.ReadData(year_data);
+                    if (dtyeardata.Rows.Count > 0)
+                    {
+                        dr["njoui"] = dtyeardata.Rows[0]["nJOUI"].ToString();
+                    }
+                    else
+                    {
+                        dr["njoui"] = "";
+                    }
+                    decimal total_njou = 0;
+                    int totaln = 0;
+                    if (dr["njoui"].ToString() != "")
+                    {
+                        total_njou = RoundingNum(dr["njoui"].ToString());
+                        totaln = decimal.ToInt32(total_njou);
+                    }
+                    decimal total_jyou = decimal.Parse(dr["jyouikouka"].ToString());
+                    int totalj = decimal.ToInt32(total_jyou);
+                    total += totaln;
+                    haifu_total += totalj;
+                    infodr2["情意考課入力"] = dr["njoui"].ToString() + "/" + dr["jyouikouka"].ToString();
+                    //infodr2["情意考課入力"] = dr["jyouikouka"].ToString();
+                    #endregion
+
                     infodr2["区分"] = dr["cKUBUN"].ToString();
                     if (tokuten_manten != 0)
                     {
@@ -646,6 +807,7 @@ namespace koukahyosystem.Controllers
             {
                 string sqlstr = "";
                 string curYear = kanrishukeiMdl.cur_year;
+                string tb_jyou = kanri.txt_jyoudata;
                 string cShain = "";                
 
                 //ログインユーザー情報
@@ -721,7 +883,8 @@ namespace koukahyosystem.Controllers
                 sqlstr += " , mg.cGROUP as cGROUP";
                 sqlstr += " , mg.sGROUP as sGROUP";
                 sqlstr += " , mk.cKUBUN as cKUBUN";
-                sqlstr += " , mk.sKUBUN as sKUBUN";                
+                sqlstr += " , mk.sKUBUN as sKUBUN";
+                sqlstr += ",dtrjoui.nJOUI as njoui";//zee
                 sqlstr += " , ifnull(dt_3dan.total, '') as tokuten_kiso ";               
                 sqlstr += " , ifnull(TRUNCATE(dt_hyouka.total,2), '') as tokuten_hyouka ";
                 sqlstr += " , ifnull(mhai.nHAIFU, '') as jyouikouka ";
@@ -761,6 +924,7 @@ namespace koukahyosystem.Controllers
                 sqlstr += "  LEFT JOIN m_group mg on mg.cGROUP = ms.cGROUP AND mg.cBUSHO = ms.cBUSHO ";
                 sqlstr += "  INNER JOIN m_kubun mk on mk.cKUBUN = ms.cKUBUN ";
                 sqlstr += "  LEFT JOIN m_haifu mhai on mhai.cKUBUN = ms.cKUBUN and mhai.cTYPE = '04' ";
+                sqlstr += "LEFT JOIN (select rjou.cSHAIN,rjou.nJOUI from r_jouikoka rjou where dNENDOU='" + curYear + "' group by rjou.cSHAIN) dtrjoui on dtrjoui.cSHAIN=ms.cSHAIN ";//zee
                 sqlstr += "  Where mhai.dNENDOU =  '" + curYear + "'";
                 //sqlstr += "  Where ms.cHYOUKASHA ='" + cShain + "'";
                 sqlstr += "  Order by mk.cKUBUN,mbs.cBUSHO,mg.cGROUP,ms.cSHAIN";
@@ -769,7 +933,7 @@ namespace koukahyosystem.Controllers
                 dt = readData.ReadData(sqlstr);
 
                 //create table 
-                //syukeidt.Columns.Add("cSHAIN");
+                syukeidt.Columns.Add("cSHAIN");
                 syukeidt.Columns.Add("氏名");
                 syukeidt.Columns.Add("部署");
                 syukeidt.Columns.Add("グループ");
@@ -781,15 +945,18 @@ namespace koukahyosystem.Controllers
                 syukeidt.Columns.Add("情意考課入力"); 
                 syukeidt.Columns.Add("合計");
                 syukeidt.Columns.Add("区分");
+                syukeidt.Columns.Add("jyou_di");
+                syukeidt.Columns.Add("nhai_di");
                 foreach (DataRow dr in dt.Rows)
                 {
                     string shain_kubun = dr["cKUBUN"].ToString();
+                    string shain = dr["cSHAIN"].ToString();
                     DataRow infodr1 = syukeidt.NewRow();
                     DataRow infodr2 = syukeidt.NewRow();
                     infodr1["description"] = "得点";
                     infodr2["description"] = "評価点";
-                    int tokuten = 0;
-                    int tokuten_manten = 0;
+                    int tokuten = 0;//gokeifront
+                    int tokuten_manten = 0;//gokeiback
                     int total = 0;
                     decimal haifu_total = 0;
 
@@ -892,13 +1059,13 @@ namespace koukahyosystem.Controllers
                     }
                     if (hyoukaten != 0 && dr["tokuten_hyouka"].ToString() != "")
                     {
-                        int tokuten_hyouka = Decimal.ToInt32(d_val);                        
+                        int tokuten_hyouka = Decimal.ToInt32(d_val);
                         infodr1["360度評価"] = tokuten_hyouka.ToString() + " / " + hyoukaten.ToString();
                         tokuten += tokuten_hyouka;
                         tokuten_manten += hyoukaten;
                     }
                     if (hyoukaten != 0 && dr["tokuten_hyouka"].ToString() != "" && haifu_hyouka != "")
-                    {                        
+                    {
                         decimal toku_hyoka = Decimal.ToInt32(d_val);
                         decimal haihyouka = decimal.Parse(haifu_hyouka);
                         decimal hyouka360val = (toku_hyoka * haihyouka) / hyoukaten;
@@ -909,8 +1076,34 @@ namespace koukahyosystem.Controllers
                         total += tensuu;
                         haifu_total += haihyouka;
                     }
-
-                    infodr2["情意考課入力"] = dr["jyouikouka"].ToString();
+                    //情意考課
+                    #region
+                    string year_data = "";
+                    year_data += "select nJOUI from r_jouikoka where cSHAIN='" + shain + "' and dNENDOU='" + curYear + "'";
+                    var readyear = new SqlDataConnController();
+                    DataTable dtyeardata = readyear.ReadData(year_data);
+                    if (dtyeardata.Rows.Count > 0)
+                    {
+                        dr["njoui"] = dtyeardata.Rows[0]["nJOUI"].ToString();
+                    }
+                    else
+                    {
+                        dr["njoui"] = "";
+                    }
+                    decimal total_njou = 0;
+                    int totaln = 0;
+                    if (dr["njoui"].ToString() != "")
+                    {
+                        total_njou = RoundingNum(dr["njoui"].ToString());
+                        totaln = decimal.ToInt32(total_njou);
+                    }
+                    decimal total_jyou = decimal.Parse(dr["jyouikouka"].ToString());
+                    int totalj = decimal.ToInt32(total_jyou);
+                    total += totaln;
+                    haifu_total += totalj;
+                    infodr2["情意考課入力"] = dr["njoui"].ToString() + "/" + dr["jyouikouka"].ToString();
+                    //infodr2["情意考課入力"] = dr["jyouikouka"].ToString();
+                    #endregion
 
                     if (tokuten_manten != 0)
                     {
@@ -921,14 +1114,17 @@ namespace koukahyosystem.Controllers
                     {
                         infodr2["合計"] = total.ToString() + " / " + haifu_total.ToString();
                     }
+                    infodr1["cSHAIN"] = dr["cSHAIN"].ToString();
+                    infodr2["cSHAIN"] = dr["cSHAIN"].ToString();
                     infodr1["氏名"] = dr["sSHAIN"].ToString();
                     infodr1["部署"] = dr["sBUSHO"].ToString();
                     infodr1["グループ"] = dr["sGROUP"].ToString();
                     infodr1["考課区分"] = dr["sKUBUN"].ToString();
                     infodr2["区分"] = dr["cKUBUN"].ToString();
+                    infodr2["jyou_di"] = dr["njoui"].ToString();
+                    infodr2["nhai_di"] = dr["jyouikouka"].ToString();
                     syukeidt.Rows.Add(infodr1);
                     syukeidt.Rows.Add(infodr2);
-
 
                 }
             }
@@ -943,16 +1139,30 @@ namespace koukahyosystem.Controllers
         private List<Models.shukeihyo> TableToList(DataTable dt)
         {
             List<Models.shukeihyo> shuekiList = new List<Models.shukeihyo>();
+            
             foreach (DataRow dr in dt.Rows)
             {
+                string firstvalue = "";
+                string secondvalue = "";
+                string value = dr["情意考課入力"].ToString();
+                string[] valueList = value.Split('/');
+                int num = valueList.Count();
+                if (num == 2)
+                {
+                    firstvalue = valueList[0].ToString();
+                    secondvalue = valueList[1].ToString();
+                }
                 shuekiList.Add(new Models.shukeihyo
                 {
+                    cSHAIN = dr["cSHAIN"].ToString(),
                     sSHAIN = dr["sSHAIN"].ToString(),
                     description = dr["description"].ToString(),
                     sandankaihyouka = dr["基礎評価"].ToString(),
                     kokahyou = dr["目標評価"].ToString(),
                     hyouka360 =  dr["360度評価"].ToString(),
-                    jyouikouka = dr["情意考課入力"].ToString(),
+                    //jyouikouka = dr["情意考課入力"].ToString(),
+                    txt_getdata = firstvalue,
+                    jyouikouka = secondvalue,
                     total = dr["合計"].ToString(),
                     cKUBUN = dr["区分"].ToString()
 
@@ -966,8 +1176,31 @@ namespace koukahyosystem.Controllers
             List<Models.kanrishukeihyo> shuekiList = new List<Models.kanrishukeihyo>();
             foreach (DataRow dr in dt.Rows)
             {
+                string firstvalue = "";
+                string secondvalue = "";
+                string c1 = dr["jyou_di"].ToString();
+                string c2 = dr["nhai_di"].ToString();
+                if (c1 == "")
+                {
+                    c1 = "0";
+                }
+                if (c2 == "")
+                {
+                    c2 = "0";
+                }
+                int first_digit = Convert.ToInt32(c1);
+                int second_digit = Convert.ToInt32(c2);
+                string value = dr["情意考課入力"].ToString();
+                string[] valueList = value.Split('/');
+                int num = valueList.Count();
+                if (num==2)
+                {
+                    firstvalue = valueList[0].ToString();
+                    secondvalue = valueList[1].ToString();
+                }
                 shuekiList.Add(new Models.kanrishukeihyo
                 {
+                    cSHAIN = dr["cSHAIN"].ToString(),
                     sSHAIN = dr["氏名"].ToString(),
                     sBUSHO = dr["部署"].ToString(),
                     sGROUP = dr["グループ"].ToString(),
@@ -976,10 +1209,12 @@ namespace koukahyosystem.Controllers
                     sandankaihyouka = dr["基礎評価"].ToString(),
                     kokahyou = dr["目標評価"].ToString(),
                     hyouka360 = dr["360度評価"].ToString(),
-                    jyouikouka = dr["情意考課入力"].ToString(),
+                    txt_jyoudata = firstvalue,
+                    jyouikouka = secondvalue,
                     total = dr["合計"].ToString(),
                     cKUBUN = dr["区分"].ToString(),
-
+                    jyou_digit =first_digit ,
+                    nhai_digit=second_digit,
                 });
             }
             return shuekiList;

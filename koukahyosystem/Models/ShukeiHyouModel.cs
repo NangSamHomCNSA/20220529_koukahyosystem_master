@@ -31,6 +31,7 @@ namespace koukahyosystem.Models
         public string jyouikouka { get; set; }
         public string total { get; set; }
         public string cKUBUN { get; set; }
+        public string txt_getdata { get; set; }
 
     }
 
@@ -52,5 +53,8 @@ namespace koukahyosystem.Models
         public string total { get; set; }
         public string cKUBUN { get; set; }
 
+        public string txt_jyoudata { get; set; }
+        public int jyou_digit { get; set; }
+        public int nhai_digit { get; set; }
     }
 }
