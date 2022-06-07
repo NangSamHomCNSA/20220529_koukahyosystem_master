@@ -901,12 +901,14 @@ namespace koukahyosystem.Controllers
                             Avgquery += " right Join  ";
                             Avgquery += " r_manzokudo rm ON rm.cKOUMOKU = ms.cKOUMOKU  ";
                             Avgquery += " and ms.dNENDOU = '" + quesyear + "'  ";
+                            Avgquery += " inner join  m_shain as m  ON m.cSHAIN = rm.cHYOUKASHA  ";//20220606 added by lwinmar
                             Avgquery += " where  ";
                             Avgquery += " fKANRYO = 1 and rm.dNENDOU = '" + year + "'  ";
                             Avgquery += " and rm.nKAISU = '" + jikivalue + "' ";
                             //  Avgquery += " and ms.cKOUMOKU != 9999  ";
                             Avgquery += " and fNYUURYOKU='1'  ";//20210517
                             Avgquery += " and rm.fKANRYO = 1 ";
+                            Avgquery += " and m.fTAISYA=0";//20220606 added by lwinmar
                             Avgquery += " and(fDELE is null or fDELE = 0)  ";
                             Avgquery += " Group by ms.cKOUMOKU";
                             Avgquery += " order by ms.nJUNBAN , ms.cKOUMOKU; ";
@@ -1034,7 +1036,8 @@ namespace koukahyosystem.Controllers
                                     Avgquery += " right Join  ";
                                     Avgquery += " r_manzokudo rm ON rm.cKOUMOKU = ms.cKOUMOKU  ";
                                     Avgquery += " and ms.dNENDOU = '" + quesyear + "'  ";
-                                    Avgquery += " where  ";
+                                    Avgquery += " inner join  m_shain as m  ON m.cSHAIN = rm.cHYOUKASHA ";//20220606 added by lwinmar
+                                    Avgquery += " where   m.fTAISYA=0  and";
                                     Avgquery += " fKANRYO = 1 and rm.dNENDOU = '" + year + "'  ";
                                     Avgquery += " and rm.nKAISU = '" + jk + "' ";
                                     Avgquery += " and fNYUURYOKU='1'  ";//20210517
