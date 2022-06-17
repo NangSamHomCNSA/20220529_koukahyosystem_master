@@ -46,6 +46,7 @@ namespace koukahyosystem.Models
         public string fDai2 { get; set; }
         public string fDai3 { get; set; }
         public string fDai4 { get; set; }
+        public string f_henkou { get; set; }
 
       
     }

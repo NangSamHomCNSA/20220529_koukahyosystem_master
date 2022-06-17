@@ -33,6 +33,8 @@ namespace koukahyosystem.Controllers
         string jiki = "";
         string depart_lbl = "";
         string group_lbl = "";
+        string hyoukalist = "";
+        string fhenkou = "";
 
         // GET: HyoukaIrai
         public ActionResult HyoukaIrai()
@@ -68,6 +70,7 @@ namespace koukahyosystem.Controllers
                 mdl.fDai3 = fdai_3;
                 mdl.fDai4 = fdai_4;
                 mdl.jiki = jiki ;
+                mdl.f_henkou=fhenkou;
               
                 mdl.YearList = readData.YearList("Hyoukairai");
                
@@ -78,7 +81,7 @@ namespace koukahyosystem.Controllers
                 ReadLbl();
                 mdl.busho_lbl = depart_lbl;
                 mdl.group_lbl = group_lbl;
-                return View(mdl);
+                 return View(mdl);
             }
             else
             {
@@ -159,7 +162,7 @@ namespace koukahyosystem.Controllers
                     mdl.f_premit = chk;
                     ModelState.Clear();
                 }
-                else if (Request["shain_btn"] == "選択")
+                else  if (Request["shain_btn"] == "選択")
                 {
                     if (mdl.h_cBUSHO != null || mdl.h_cGROUP != null)
                     {
@@ -204,7 +207,7 @@ namespace koukahyosystem.Controllers
                             if (int_jiki < 4)
                             {
                                 mdl.jiki = (int_jiki + 1).ToString();
-                            }
+                             }
                             OneGroupCheck();
 
                         }
@@ -374,12 +377,28 @@ namespace koukahyosystem.Controllers
                             NumShain = mdl.HyoukaIraiList.Count;
 
                             //Delete data in DB
-                            string sqlStr = "delete from r_hyouka where cIRAISHA='" + cshain + "' and nJIKI=" + Jiki + " and dNENDOU='" + model.cur_year + "';";
+                            string sqldelete = "";
+                            if(hyoukalist!="")
+                            {
+                                sqldelete = "and cHYOUKASHA not in (" + hyoukalist + ")";
+
+                            }
+                            string sqlStr = "delete from r_hyouka where cIRAISHA='" + cshain + "' and nJIKI=" + Jiki + " " +
+                                             "and dNENDOU='" + model.cur_year + "'"+ sqldelete + " ;";
                             var sqlCont = new SqlDataConnController();
                             Boolean ret = sqlCont.inputsql(sqlStr);
                             if (ret == true)
                             {
-                                TempData["com_msg"] = "解除しました。";
+                                if (hyoukalist.Count() > 0 && hyoukalist.Count() <10)
+                                {
+                                    TempData["com_msg"] = "変更しました。";
+                                }
+                                else
+                                {
+                                    TempData["com_msg"] = "解除しました。";
+                                   
+                                }
+
                             }
                             else
                             {
@@ -496,6 +515,7 @@ namespace koukahyosystem.Controllers
                 mdl.fDai3 = fdai_3;
                 mdl.fDai4 = fdai_4;
                 mdl.jiki = jiki;
+                mdl.f_henkou = fhenkou;
                 if (mdl.HyoukaIraiList == null)
                 {
                     mdl.HyoukaIraiList = new List<Models.HyoukaIrai>();
@@ -515,7 +535,7 @@ namespace koukahyosystem.Controllers
                 return RedirectToRoute("Default", new { controller = "Default", action = "Login" });
             }
             return View(mdl);
-        }
+          }
 
         private void HyoukaIem()
         {                     
@@ -531,6 +551,11 @@ namespace koukahyosystem.Controllers
                 Int64 c_dai_3 = 0;
                 Int64 c_dai_4 = 0;
 
+                Int64 c_dai1_mi = 0;//20220610 added by lwinmar
+                Int64 c_dai2_mi = 0;
+                Int64 c_dai3_mi = 0;
+                Int64 c_dai4_mi = 0;
+
                 int c_passdai1 = 0;
                 int c_passdai2 = 0;
                 int c_passdai3 = 0;
@@ -545,6 +570,7 @@ namespace koukahyosystem.Controllers
                     if (dr_dai1.Length > 0)
                     {
                         NumShain = dr_dai1.Length;
+                        fhenkou = "1";
                     }
                     DataRow[] d1count = dt.Select("dai_1 = '済'");
                     c_passdai1 = d1count.Length;
@@ -561,6 +587,7 @@ namespace koukahyosystem.Controllers
                     if (dr_dai2.Length > 0)
                     {
                         NumShain = dr_dai2.Length;
+                        fhenkou = "1";
                     }
                     DataRow[] d2count = dt.Select("dai_2 = '済'");
                     c_passdai2 = d2count.Length;
@@ -578,6 +605,7 @@ namespace koukahyosystem.Controllers
                     if (dr_dai3.Length > 0)
                     {
                         NumShain = dr_dai3.Length;
+                        fhenkou = "1";
                     }
                     DataRow[] d3count = dt.Select("dai_3 = '済'");
                     c_passdai3 = d3count.Length;
@@ -595,6 +623,7 @@ namespace koukahyosystem.Controllers
                     if (dr_dai4.Length > 0)
                     {
                         NumShain = dr_dai4.Length;
+                        fhenkou = "1";
                     }
                     DataRow[] d4count = dt.Select("dai_4 = '済'");
                     c_passdai4 = d4count.Length;
@@ -617,7 +646,14 @@ namespace koukahyosystem.Controllers
                         }
                         else if (dr["dai_1"].ToString() != "")
                         {
-                            c_dai_1++;
+                            if (dr["dai_1"].ToString() == "済")
+                            {
+                                c_dai1_mi++;
+                            }
+                            else
+                            {
+                                c_dai_1++;
+                            }
                             dr["f_chkDai1"] = true;
                         }
 
@@ -627,7 +663,14 @@ namespace koukahyosystem.Controllers
                         }
                         else if (dr["dai_2"].ToString() != "")
                         {
-                            c_dai_2++;
+                            if (dr["dai_2"].ToString() == "済")
+                            {
+                                c_dai2_mi++;
+                            }
+                            else
+                            {
+                                c_dai_2++;
+                            }
                             dr["f_chkDai2"] = true;
 
                         }
@@ -638,7 +681,14 @@ namespace koukahyosystem.Controllers
                         }
                         else if (dr["dai_3"].ToString() != "")
                         {
-                            c_dai_3++;
+                            if (dr["dai_3"].ToString() == "済")
+                            {
+                                c_dai3_mi++;
+                            }
+                            else
+                            {
+                                c_dai_3++;
+                            }
                             dr["f_chkDai3"] = true;
 
                         }
@@ -649,7 +699,15 @@ namespace koukahyosystem.Controllers
                         }
                         else if (dr["dai_4"].ToString() != "")
                         {
-                            c_dai_4++;
+                            if (dr["dai_4"].ToString() == "済")
+                            {
+                                c_dai4_mi++;
+                            }
+                            else
+                            {
+                                c_dai_4++;
+                            }
+                            
                             dr["f_chkDai4"] = true;
                         }
 
@@ -686,11 +744,22 @@ namespace koukahyosystem.Controllers
                     }
                     
                     //第１ボタン名
-                    if (c_dai_1 == 10)
+                    //if (c_dai_1 == 10)
+                    //{
+                    //    dai1_btn = "確定";
+                    //    jiki = "1";
+                    //}
+                    if (c_dai_1 == 10 || c_dai1_mi == 10)
                     {
                         dai1_btn = "確定";
                         jiki = "1";
                     }
+                    else if (c_dai_1 + c_dai1_mi == 10)
+                    {
+                        dai1_btn = "変更";
+                        jiki = "1";
+                    }
+                   
                     else
                     {
                         dai1_btn = "依頼";
@@ -700,9 +769,15 @@ namespace koukahyosystem.Controllers
                         dai1_btn = "変更";
                     }
                     //第２ボタン名
-                    if (c_dai_2 == 10)
+                   
+                    if (c_dai_2 == 10 || c_dai2_mi == 10)
                     {
                         dai2_btn = "確定";
+                        jiki = "2";
+                    }
+                    else if (c_dai_2 + c_dai2_mi == 10)
+                    {
+                        dai2_btn = "変更";
                         jiki = "2";
                     }
                     else
@@ -714,9 +789,14 @@ namespace koukahyosystem.Controllers
                         dai2_btn = "変更";
                     }
                     //第３ボタン名
-                    if (c_dai_3 == 10)
+                    if (c_dai_3 == 10 || c_dai3_mi == 10)
                     {
                         dai3_btn = "確定";
+                        jiki = "3";
+                    }
+                    else if (c_dai_3 + c_dai3_mi == 10)
+                    {
+                        dai3_btn = "変更";
                         jiki = "3";
                     }
                     else
@@ -728,9 +808,14 @@ namespace koukahyosystem.Controllers
                         dai3_btn = "変更";
                     }
                     //第４ボタン名
-                    if (c_dai_4 == 10)
+                    if (c_dai_4 == 10 || c_dai4_mi==10)
                     {
                         dai4_btn = "確定";
+                        jiki = "4";
+                    }
+                    else if (c_dai_4+c_dai4_mi== 10)
+                    {
+                        dai4_btn = "変更";
                         jiki = "4";
                     }
                     else
@@ -756,6 +841,7 @@ namespace koukahyosystem.Controllers
             string dai2 = "";
             string dai3 = "";
             string dai4 = "";
+           // string ftai = "";
             Boolean fdai1 = false;
             Boolean fdai2 = false;
             Boolean fdai3 = false;
@@ -764,6 +850,7 @@ namespace koukahyosystem.Controllers
 
             foreach (var item in HyoukaIraiList)
             {
+                string ftai = "";
                 if (item.dai_1 == null)
                 {
                     item.dai_1 = "";
@@ -788,7 +875,23 @@ namespace koukahyosystem.Controllers
                 {
                     if (item.dai_1 == "未")
                     {
-                        dai1 = "";
+                        if(item.ftaisya=="1")
+                        {
+                            dai1 = "";
+                            fdai1 = false;
+                            ftai = "1";
+                        }
+                        else
+                        {
+                            dai1 = "";
+                            fdai1 = true;
+                        }
+                       
+                    }
+                   else if(item.dai_1 == "済")
+                    {
+                        hyoukalist += item.HyoukashaId+",";
+                        dai1 = "済";
                         fdai1 = true;
                     }
                     else
@@ -802,7 +905,23 @@ namespace koukahyosystem.Controllers
                 {
                     if (item.dai_2 == "未")
                     {
-                        dai2 = "";
+                        if (item.ftaisya == "1")
+                        {
+                            dai2 = "";
+                            fdai2 = false;
+                            ftai = "1";
+                        }
+                        else
+                        {
+                            dai2 = "";
+                            fdai2 = true;
+                        }
+                        
+                    }
+                    else if (item.dai_2 == "済")
+                    {
+                        hyoukalist += item.HyoukashaId + ",";
+                        dai2 = "済";
                         fdai2 = true;
                     }
                     else
@@ -819,7 +938,23 @@ namespace koukahyosystem.Controllers
                 {
                     if (item.dai_3 == "未")
                     {
-                        dai3 = "";
+                        if (item.ftaisya == "1")
+                        {
+                            dai3 = "";
+                            fdai3 = false;
+                            ftai = "1";
+                        }
+                        else
+                        {
+                            dai3 = "";
+                            fdai3 = true;
+                        }
+                       
+                    }
+                    else if (item.dai_3 == "済")
+                    {
+                        hyoukalist += item.HyoukashaId + ",";
+                        dai3 = "済";
                         fdai3 = true;
                     }
                     else
@@ -837,7 +972,23 @@ namespace koukahyosystem.Controllers
                 {
                     if (item.dai_4 == "未")
                     {
-                        dai4 = "";
+                        if (item.ftaisya == "1")
+                        {
+                            dai4 = "";
+                            fdai4 = false;
+                            ftai = "1";
+                        }
+                        else
+                        {
+                            dai4 = "";
+                            fdai4 = true;
+                        }
+                        
+                    }
+                    else if (item.dai_4 == "済")
+                    {
+                        hyoukalist += item.HyoukashaId + ",";
+                        dai4 = "済";
                         fdai4 = true;
                     }
                     else
@@ -852,6 +1003,8 @@ namespace koukahyosystem.Controllers
                     dai3 = item.dai_3;
                     fdai3 = item.f_chkDai3;
                 }
+
+               
                 HyokaIrai.Add(new Models.HyoukaIrai
                 {
                     HyoukashaId = item.HyoukashaId,
@@ -865,9 +1018,27 @@ namespace koukahyosystem.Controllers
                     dai_4 = dai4,
                     f_chkDai4 = fdai4,
                     fborder = item.fborder,
+                    ftaisya=ftai,
                 });
             }
+            try
+            {
+                int jk = Convert.ToUInt16(Jiki);
+                if (jk >= 1)
+                {
+                    jiki = (jk - 1).ToString();
+                }
 
+                if (hyoukalist != "")
+                {
+                    hyoukalist = hyoukalist.Remove(hyoukalist.Length - 1, 1);
+                }
+            }
+            catch
+            {
+
+            }
+            
             //return HyokaIrai;
         }
 
@@ -1101,23 +1272,51 @@ namespace koukahyosystem.Controllers
                 {
                     if (mdl.jiki == "1")
                     {
-                        dr["dai_1"] = "";
+                       // dr["dai_1"] = "";
                         dr["f_chkDai1"] = true;
+                        if (dr["dai_1"].ToString() == "済")//20220606 added by lwinmar
+                        {
+                        }
+                        else
+                        {
+                            dr["dai_1"] = "";
+                        }
                     }
                     else if (mdl.jiki == "2")
                     {
-                        dr["dai_2"] = "";
+                       
                         dr["f_chkDai2"] = true;
+                        if (dr["dai_2"].ToString() == "済")
+                        {
+                        }
+                        else
+                        {
+                            dr["dai_2"] = "";
+                        }
                     }
                     else if (mdl.jiki == "3")
                     {
-                        dr["dai_3"] = "";
+                        //dr["dai_3"] = "";
                         dr["f_chkDai3"] = true;
+                        if (dr["dai_3"].ToString() == "済")//20220606 added by lwinmar
+                        {
+                        }
+                        else
+                        {
+                            dr["dai_3"] = "";
+                        }
                     }
                     else
                     {
-                        dr["dai_4"] = "";
+                       // dr["dai_4"] = "";
                         dr["f_chkDai4"] = true;
+                        if (dr["dai_4"].ToString() == "済")//20220606 added by lwinmar
+                        {
+                        }
+                        else
+                        {
+                            dr["dai_4"] = "";
+                        }
                     }
                 }
 
@@ -1325,17 +1524,25 @@ namespace koukahyosystem.Controllers
                     foreach (var item in HyoukaIdList)
                     {
                         string hyoukasha = item.ToString();
-                        foreach (DataRow dr in rowDr)
+                        string hyoukacheckstring = "";
+                        hyoukacheckstring = " SELECT *";
+                        hyoukacheckstring += " FROM  r_hyouka Where cIRAISHA ='" +Iraisha+ "' and dNENDOU='"+ YearNow + "' " +
+                                             "and cHYOUKASHA='"+ hyoukasha + "' and nJIKI='"+ Jiki + "' and fHYOUKA =1;";
+                        DataTable dt = ReadTable("r_hyouka", hyoukacheckstring);
+                        if (dt.Rows.Count == 0)
                         {
-                            if (dr["cKUBUN"].ToString() != "")
+                            foreach (DataRow dr in rowDr)
                             {
-                                if (rowCount != 0)
+                                if (dr["cKUBUN"].ToString() != "")
                                 {
-                                    sqlquery += ",";
+                                    if (rowCount != 0)
+                                    {
+                                        sqlquery += ",";
+                                    }
+                                    sqlquery += "('" + Iraisha + "', '" + hyoukasha + "','" + shainkubun + "'," + YearNow +
+                                                ",'" + Jiki + "','0','" + dr["cKOUMOKU"].ToString() + "')";
+                                    rowCount++;
                                 }
-                                sqlquery += "('" + Iraisha + "', '" + hyoukasha + "','" + shainkubun + "'," + YearNow +
-                                            ",'" + Jiki + "','0','" + dr["cKOUMOKU"].ToString() + "')";
-                                rowCount++;
                             }
                         }
                     }
@@ -1425,12 +1632,22 @@ namespace koukahyosystem.Controllers
                         HyoukashaIdList.Add(item.HyoukashaId);
 
                     }
+                   else if (item.dai_1 == "済")
+                    {
+                        HyoukashaIdList.Add(item.HyoukashaId);
+
+                    }
                 }
                 if (Jiki == "2")
                 {
                     if (item.f_chkDai2 == true)
                     {
                         HyoukashaIdList.Add(item.HyoukashaId);
+                    }
+                    else if (item.dai_2 == "済")
+                    {
+                        HyoukashaIdList.Add(item.HyoukashaId);
+
                     }
                 }
                 if (Jiki == "3")
@@ -1439,12 +1656,22 @@ namespace koukahyosystem.Controllers
                     {
                         HyoukashaIdList.Add(item.HyoukashaId);
                     }
+                    else if (item.dai_3 == "済")
+                    {
+                        HyoukashaIdList.Add(item.HyoukashaId);
+
+                    }
                 }
                 if (Jiki == "4")
                 {
                     if (item.f_chkDai4 == true)
                     {
                         HyoukashaIdList.Add(item.HyoukashaId);
+                    }
+                    else if (item.dai_4 == "済")
+                    {
+                        HyoukashaIdList.Add(item.HyoukashaId);
+
                     }
                 }
             }

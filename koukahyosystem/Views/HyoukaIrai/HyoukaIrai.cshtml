@@ -248,11 +248,12 @@
                 //$(this).css("background","blue");
                 var keval = $(this).find("input").val();
                 if (keval == "済") {
-                    c_count = 1;
+                   // c_count = 1;
+                    c_count++;//20220603 added by lwinmar
                 }
             });
 
-            if (c_count == 1) {
+            if (c_count == 10){
 
                 document.getElementById("dai1").disabled = true;
                 $('#dai1').addClass("disabled");
@@ -267,11 +268,12 @@
                  //$(this).css("background","blue");
                  var keval = $(this).find("input").val();
                  if (keval == "済") {
-                     c_count = 1;
+                    // c_count = 1;
+                     c_count++;//20220603 added by lwinmar
                  }
              });
 
-             if (c_count == 1) {
+             if (c_count == 10) {
                  document.getElementById("dai2").disabled = true;
                  $('#dai2').addClass("disabled");
              }
@@ -285,11 +287,12 @@
                  //$(this).css("background","pink");
                  var keval = $(this).find("input").val();
                  if (keval == "済") {
-                     c_count = 1;
+                    // c_count = 1;
+                     c_count++;//20220603 added by lwinmar
                  }
              });
 
-            if (c_count == 1)
+            if (c_count == 10)
             {
                 document.getElementById("dai3").disabled = true;
                 $('#dai3').addClass("disabled");
@@ -304,11 +307,12 @@
                  //$(this).css("background","orange");
                  var keval = $(this).find("input").val();
                  if (keval == "済") {
-                     c_count = 1;
+                     //c_count = 1;
+                     c_count++;//20220603 added by lwinmar
                  }
              });
 
-             if (c_count == 1) {
+             if (c_count == 10) {
                  document.getElementById("dai4").disabled = true;
                  $('#dai4').addClass("disabled");
              }
@@ -345,9 +349,9 @@
 
             var th = $('#DataTable th').eq($(this).index());
             var headername = th.text();
-            var col = $(this).index();
-            var rowIndex = $(this).parent().index();
-
+             var col = $(this).index();
+             var rowIndex = $(this).parent().index();
+            // alert(headername);
             if (headername == '第1')
             {
                 if (($("#dai1").is(":disabled")) == true) {
@@ -393,6 +397,7 @@
 
                     //退職者
                     var ftaisha = row.find('td:eq(1) input').val();
+                  //  var ftaisha = row.find('td:eq(1) c').val();
                     if (ftaisha == '1')
                     {
                         event.preventDefault();
@@ -407,6 +412,7 @@
                             $("t#jiki").val('1');
                             var chk = $(this).closest("tr").find("input:checkbox").get(0);
                             if (event.target != chk) {
+                                //alert("ok");
                                 chk.checked = !chk.checked;
                             }
                         }
@@ -544,13 +550,18 @@
                     $("#DataTable tbody tr").find('td:eq(' + col + ')').each(function () {
                     //var textVal = ($(this).find('input[type="Text"]').val());
                     //alert('textVal<<' + textVal);
-                        var hyoukashamei = $('#DataTable tr:eq(' + rCount + ') td:eq(0)').text();
+                        var hyoukashamei = $('#DataTable tr:eq('+rCount+') td:eq(0)').text();
+
+                        var chkval = ($(this).find('input[type="Text"]').val());
+                        if (chkval == "済") {
+                            countchecked++;
+                        }
                         if ($(this).find(':checkbox').is(':checked')) {
                             countchecked++;
                         }
                         rCount++;
-                     });
-
+                    });
+                    //alert(countchecked);
                     if (countchecked > LimitNum) {
                         event.preventDefault();
                         event.stopPropagation();
@@ -572,18 +583,24 @@
             var col = $(this).index();
             var rowIndex = $(this).parent().index();
             var countchecked = 0;
+            var kichecked = 0;
             var countkaijyou = 0;
             var rCount = 1;
 
             var btnVal = $('#DataTable tr:eq(1) td:eq(' + col + ')').text();
             btnVal = btnVal.trim();
-
             $("#DataTable tbody tr").find('td:eq(' + col + ')').each(function () {
-                if ($(this).find(':checkbox').is(':checked')) {
+                var chkval = ($(this).find('input[type="Text"]').val());
+                if (chkval == "済") {
                     countchecked++;
                 }
+                if ($(this).find(':checkbox').is(':checked')) {
+                    countchecked++;
+                    kichecked++;
+                }
                 var keval = $(this).find("input").val();
-                if (keval == "未")
+                //if (keval == "未")
+                if (keval == "済")//20220603 added by lwinmar
                 {
                     countkaijyou++;
                 }
@@ -614,18 +631,30 @@
 
             if (btnVal == "確定") {
 
-                //return;
-                if (countkaijyou != 10) {
+              //  if (countkaijyou != 10) {
+                //20220603 added by lwinmar
+                if (countkaijyou == 10) {
                     alert('依頼者を解除出来ません。');
                     return;
                 }
+
                 var input = $("<input />");
                 input.attr("type", "hidden").attr("name", "kaijyo_confrim");
-                if (confirm("依頼者を解除しますか？")) {
-                    input.val("OK");
-                } else {
-                    input.val("キャンセル");
+                if (countkaijyou == 0) {
+                    if (confirm("依頼者を解除しますか？")) {
+                        input.val("OK");
+                    } else {
+                        input.val("キャンセル");
+                    }
                 }
+                else {
+                    if (confirm("依頼者を変更しますか？")) {
+                        input.val("OK");
+                    } else {
+                        input.val("キャンセル");
+                    }
+                }
+
                 $("form")[0].appendChild(input[0]);
 
             }
@@ -649,19 +678,47 @@
 
             }
             else if (btnVal == "変更") {
-                if (countchecked != '@Model.Totalshain') {
-                    alert('退職者代わりに、評価者' + '@Model.Totalshain' + '人をチェックして下さい。');
-                    return;
-                }
-
 
                 var input = $("<input />");
-                input.attr("type", "hidden").attr("name", "taishahenkou");
-                if (confirm("依頼者を変更しますか？")) {
-                    input.val("OK");
-                } else {
-                    input.val("キャンセル");
+                if ('@Model.f_henkou' == "1") {
+                   
+                    if (countkaijyou > 0) {
+
+                        input.attr("type", "hidden").attr("name", "kaijyo_confrim");
+                        if (confirm("退職した社員をチェック外すしますが、変更しますか？")) {
+                            input.val("OK");
+                        } else {
+                            input.val("キャンセル");
+                        }
+                    }
+                    else {
+                        if (kichecked != '@Model.Totalshain') {
+                            alert('退職者代わりに、評価者' + '@Model.Totalshain' + '人をチェックして下さい。');
+                            return;
+                        }
+                        input.attr("type", "hidden").attr("name", "taishahenkou");
+                        if (confirm("依頼者を変更しますか？")) {
+                            input.val("OK");
+                        } else {
+                            input.val("キャンセル");
+                        }
+                    }
                 }
+                else {
+
+                    input.attr("type", "hidden").attr("name", "kaijyo_confrim");
+                    if (confirm("依頼者を変更しますか？")) {
+                        input.val("OK");
+                    } else {
+                        input.val("キャンセル");
+                    }
+                }
+
+                //if (confirm("依頼者を変更しますか？")) {
+                //    input.val("OK");
+                //} else {
+                //    input.val("キャンセル");
+                //}
                 $("form")[0].appendChild(input[0]);
 
             }
@@ -891,6 +948,7 @@
                         @Html.HiddenFor(m => m.fDai2, new { style = "position:absoulte" })
                         @Html.HiddenFor(m => m.fDai3, new { style = "position:absoulte" })
                         @Html.HiddenFor(m => m.fDai4, new { style = "position:absoulte" })
+                        @Html.HiddenFor(m => m.f_henkou, new { style = "position:absoulte" })
                     </div>
 
                 </div>
