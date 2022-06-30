@@ -1184,10 +1184,12 @@ namespace koukahyosystem.Controllers
                     delStr = "";
                     delStr += " Update m_koukatema set nHAITEN = @null, nTASSEIRITSU = @null ";
                     delStr += " ,nTOKUTEN = @null , fKANRYOU = 0, fKAKUTEI = 0";
+                    delStr += " ,cKUBUN='"+ shain .cKUBUN+ "'"; //added by nan 20220630
                     delStr += " Where cshain = '" + shain.cSHAIN + "' and dNENDOU='" + curyear + "'; ";
 
                     delStr += " Update r_jishitasuku set nHAITEN = @null, nTASSEIRITSU = @null ";
                     delStr += " ,fKANRYO = 0, fKAKUTEI = @null ";
+                    delStr += " ,cKUBUN='" + shain.cKUBUN + "'";//added by nan 20220630
                     delStr += " Where cshain = '" + shain.cSHAIN + "' and dNENDOU='" + curyear + "'; ";
                     sqlctr.inputnullsql(delStr);
 

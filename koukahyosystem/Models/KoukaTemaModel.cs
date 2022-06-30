@@ -66,6 +66,9 @@ namespace koukahyosystem.Models
         public string tasuku5_exist { get; set; }
         public string show_sashimodoshi { get; set; }
         public string chk_saitenhouhou { get; set; }
+
+        public string upper_value { get; set; }//20220621 added by lwin mar
+        public string lower_value { get; set; }//20220621 added by lwin mar
     }
     public class tema_list
     {

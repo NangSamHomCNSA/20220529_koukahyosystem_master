@@ -1118,16 +1118,30 @@ namespace koukahyosystem.Controllers
         {
             string kubun_id = "";
 
-            string kubunQuery = "SELECT cKUBUN FROM m_shain where cSHAIN='" + shainID + "';";
+            string kubunQuery = "SELECT cKUBUN FROM r_kiso where cSHAIN='" + shainID + "' and dNENDOU='" + pg_year + "' group by cSHAIN ;";
 
             System.Data.DataTable dt_kubun = new System.Data.DataTable();
             var readData = new SqlDataConnController();
             dt_kubun = readData.ReadData(kubunQuery);
-            foreach (DataRow dr_kubun in dt_kubun.Rows)
+            if (dt_kubun.Rows.Count > 0)
             {
-                kubun_id = dr_kubun["cKUBUN"].ToString();
+                foreach (DataRow dr_kubun in dt_kubun.Rows)
+                {
+                    kubun_id = dr_kubun["cKUBUN"].ToString();
+                }
             }
-            
+            else
+            {
+                dt_kubun.Clear();
+                string kubunshaQuery = "SELECT cKUBUN FROM m_shain where cSHAIN='" + shainID + "'";
+                //DataTable dt_kubunsha = new DataTable();
+                dt_kubun = readData.ReadData(kubunshaQuery);
+                foreach (DataRow dr_kubun in dt_kubun.Rows)
+                {
+                    kubun_id = dr_kubun["cKUBUN"].ToString();
+                }
+            }
+
             return kubun_id;
         }
         #endregion

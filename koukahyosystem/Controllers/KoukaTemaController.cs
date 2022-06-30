@@ -968,13 +968,24 @@ namespace koukahyosystem.Controllers
                         val.kakutei_disable = "disable";
                         val.sashimodoshi_disable = "disable";
                     }
+                    #region get  up_down value 20220621 lwinmar added
+                    //DataTable dt_limit = dt(Year,shainkubun);
+                    DataTable dt_limit = new DataTable();
+                    dt_limit = getLimit(kbun, pg_year);
+                    foreach (DataRow Lsdr in dt_limit.Rows)
+                    {
+                        val.upper_value = Lsdr["nUPPERLIMIT"].ToString();
+                        val.lower_value = Lsdr["nLOWERLIMIT"].ToString();
+                    }
+
+                    #endregion
                 }
                 else
                 {
                     TempData["master_haiten"] = "";
                 }
                 Session["homeYear"] = null;
-
+                
                 get_kaiso();
             }
             else
@@ -1151,17 +1162,28 @@ namespace koukahyosystem.Controllers
         public string get_kubun(string shainID)
         {
             string kubun_id = "";
-
-            string kubunQuery = "SELECT cKUBUN FROM m_shain where cSHAIN='" + shainID + "';";
+            string kubunquery = "SELECT cKUBUN FROM m_koukatema where cSHAIN='" + shainID + "' and dNENDOU='" + pg_year + "' group by cSHAIN ;";
 
             System.Data.DataTable dt_kubun = new System.Data.DataTable();
             var readData = new SqlDataConnController();
-            dt_kubun = readData.ReadData(kubunQuery);
-            foreach (DataRow dr_kubun in dt_kubun.Rows)
+            dt_kubun = readData.ReadData(kubunquery);
+            if (dt_kubun.Rows.Count > 0)
             {
-                kubun_id = dr_kubun["cKUBUN"].ToString();
+                foreach (DataRow dr_kubun in dt_kubun.Rows)
+                {
+                    kubun_id = dr_kubun["cKUBUN"].ToString();
+                }
             }
-
+            else
+            {
+                dt_kubun.Clear();
+                string kubunQuery = "SELECT cKUBUN FROM m_shain where cSHAIN='" + shainID + "' ;";
+                dt_kubun = readData.ReadData(kubunQuery);
+                foreach(DataRow dr_kubun in dt_kubun.Rows)
+                {
+                    kubun_id = dr_kubun["cKUBUN"].ToString();
+                }
+            }
             return kubun_id;
         }
         #endregion
@@ -1346,10 +1368,10 @@ namespace koukahyosystem.Controllers
                 master_haiten = get_haiten_mark(kbun, PgName, pg_year);
 
                 #region check type
-                type_year = get_saitehouhouYear(kubun_code, pg_year);
+                type_year = get_saitehouhouYear(kbun, pg_year);
 
                 check_type = "SELECT fmokuhyou,fjuyoutask FROM m_saitenhouhou " +
-                    "where cKUBUN='" + kubun_code + "' and dNENDOU='" + type_year + "';";
+                    "where cKUBUN='" + kbun + "' and dNENDOU='" + type_year + "';";
 
                 System.Data.DataTable dt_chkType = new System.Data.DataTable();
                 var chkreadData = new SqlDataConnController();
@@ -2458,7 +2480,17 @@ namespace koukahyosystem.Controllers
                     }
                 }
                 #endregion
+                #region get  up_down value 20220621 lwinmar added
+                //DataTable dt_limit = dt(Year,shainkubun);
+                DataTable dt_limit = new DataTable();
+                dt_limit = getLimit(kbun, pg_year);
+                foreach (DataRow Lsdr in dt_limit.Rows)
+                {
+                    val.upper_value = Lsdr["nUPPERLIMIT"].ToString();
+                    val.lower_value = Lsdr["nLOWERLIMIT"].ToString();
+                }
 
+                #endregion
                 get_kaiso();
             }
             else
@@ -2522,6 +2554,8 @@ namespace koukahyosystem.Controllers
                             foreach (var item in t_list)
                             {
                                 no_count++;
+                                txtArea_temaName_value = "";
+                                txtArea_tema_value = "";
                                 if (item.tema_name_value == null && item.haiten == null)
                                 {
                                     string check_tasukuQuery = "SELECT count(*) as COUNT FROM r_jishitasuku " +
@@ -2547,7 +2581,7 @@ namespace koukahyosystem.Controllers
                                     tema_Save_query += "delete FROM m_koukatema " +
                                         "where cSHAIN='" + s_id + "' and cTEMA='0" + no_count + "' and dNENDOU='" + year + "' ;";
                                     insert_values += "('" + s_id + "', '0" + no_count + "', '', ''," +
-                                        " '','" + year + "',null,null,null,0,0),";
+                                        " '','" + year + "',null,null,null,0,0,'" + kubunCode + "' ),";
                                 }
                                 else
                                 {
@@ -2581,7 +2615,7 @@ namespace koukahyosystem.Controllers
                                     tema_Save_query += "delete FROM m_koukatema " +
                                         "where cSHAIN='" + s_id + "' and cTEMA='0" + no_count + "' and dNENDOU='" + year + "' ;";
                                     insert_values += "('" + s_id + "', '0" + no_count + "', '" + txtArea_temaName_value + "', '" + txtArea_tema_value + "'," +
-                                        " '" + k_id + "','" + year + "'," + item.haiten + ","+ item.taseritsu +"," + item.tokuten + ",0,0),";
+                                        " '" + k_id + "','" + year + "'," + item.haiten + "," + item.taseritsu + "," + item.tokuten + ",0,0,'" + kubunCode + "'),";
                                 }
                             }
                         }
@@ -2590,7 +2624,8 @@ namespace koukahyosystem.Controllers
                             foreach (var item in t_list)
                             {
                                 no_count++;
-
+                                txtArea_temaName_value = "";
+                                txtArea_tema_value = "";
                                 if (item.tema_name_value == null && item.haiten == null)
                                 {
                                     string check_tasukuQuery = "SELECT count(*) as COUNT FROM r_jishitasuku " +
@@ -2616,7 +2651,7 @@ namespace koukahyosystem.Controllers
                                     tema_Save_query += "delete FROM m_koukatema " +
                                         "where cSHAIN='" + s_id + "' and cTEMA='0" + no_count + "' and dNENDOU='" + year + "' ;";
                                     insert_values += "('" + s_id + "', '0" + no_count + "', '', ''," +
-                                        " '','" + year + "',null,null,null,0,0),";
+                                        " '','" + year + "',null,null,null,0,0,'" + kubunCode + "' ),";
                                 }
                                 else
                                 {
@@ -2650,14 +2685,14 @@ namespace koukahyosystem.Controllers
                                     tema_Save_query += "delete FROM m_koukatema " +
                                         "where cSHAIN='" + s_id + "' and cTEMA='0" + no_count + "' and dNENDOU='" + year + "' ;";
                                     insert_values += "('" + s_id + "', '0" + no_count + "', '" + txtArea_temaName_value + "', '" + txtArea_tema_value + "'," +
-                                        " '" + k_id + "','" + year + "'," + item.haiten + ","+ item.taseritsu +"," + item.tokuten + ",0,0),";
+                                        " '" + k_id + "','" + year + "'," + item.haiten + "," + item.taseritsu + "," + item.tokuten + ",0,0,'" + kubunCode + "'),";
                                 }
 
                             }
                         }
                         insert_values = insert_values.Substring(0, insert_values.Length - 1);
                         tema_Save_query += "insert into m_koukatema" +
-                            "(cSHAIN, cTEMA, sTEMA_NAME, sTEMA, cKAKUNINSHA,dNENDOU,nHAITEN,nTASSEIRITSU,nTOKUTEN,fKANRYOU,fKAKUTEI) " +
+                            "(cSHAIN, cTEMA, sTEMA_NAME, sTEMA, cKAKUNINSHA,dNENDOU,nHAITEN,nTASSEIRITSU,nTOKUTEN,fKANRYOU,fKAKUTEI,cKUBUN) " +
                                                "values" + insert_values + ";";
 
                         if (tema_Save_query != "")
@@ -2721,6 +2756,8 @@ namespace koukahyosystem.Controllers
                             foreach (var item in t_list)
                             {
                                 no_count++;
+                                txtArea_temaName_value = "";
+                                txtArea_tema_value = "";
                                 if (item.tema_name_value == null && item.haiten == null)
                                 {
                                     string check_tasukuQuery = "SELECT count(*) as COUNT FROM r_jishitasuku where cSHAIN='" + s_id + "' and cTEMA='0" + no_count + "' and dNENDOU='" + year + "';";
@@ -2744,7 +2781,7 @@ namespace koukahyosystem.Controllers
                                     tema_Save_query += "delete FROM m_koukatema " +
                                         "where cSHAIN='" + s_id + "' and cTEMA='0" + no_count + "' and dNENDOU='" + year + "' ;";
                                     insert_values += "('" + s_id + "', '0" + no_count + "', '', ''," +
-                                        " '','" + year + "',null,null,null,1,0),";
+                                        " '','" + year + "',null,null,null,1,0,'" + kubunCode + "' ),";
                                 }
                                 else
                                 {
@@ -2833,7 +2870,7 @@ namespace koukahyosystem.Controllers
                                     tema_Save_query += "delete FROM m_koukatema " +
                                         "where cSHAIN='" + s_id + "' and cTEMA='0" + no_count + "' and dNENDOU='" + year + "' ;";
                                     insert_values += "('" + s_id + "', '0" + no_count + "', '" + txtArea_temaName_value + "', '" + txtArea_tema_value + "'," +
-                                        " '" + k_id + "','" + year + "'," + item.haiten + ","+ item.taseritsu +"," + item.tokuten + ",1,0),";
+                                        " '" + k_id + "','" + year + "'," + item.haiten + "," + item.taseritsu + "," + item.tokuten + ",1,0,'" + kubunCode + "' ),";
                                 }
                             }
                         }
@@ -2842,7 +2879,8 @@ namespace koukahyosystem.Controllers
                             foreach (var item in t_list)
                             {
                                 no_count++;
-
+                                txtArea_temaName_value = "";
+                                txtArea_tema_value = "";
                                 if (item.tema_name_value == null && item.haiten == null)
                                 {
                                     string check_tasukuQuery = "SELECT count(*) as COUNT FROM r_jishitasuku " +
@@ -2868,7 +2906,7 @@ namespace koukahyosystem.Controllers
                                     tema_Save_query += "delete FROM m_koukatema " +
                                         "where cSHAIN='" + s_id + "' and cTEMA='0" + no_count + "' and dNENDOU='" + year + "' ;";
                                     insert_values += "('" + s_id + "', '0" + no_count + "', '', ''," +
-                                        " '','" + year + "',null,null,null,1,1),";
+                                        " '','" + year + "',null,null,null,1,1,'" + kubunCode + "' ),";
                                 }
                                 else
                                 {
@@ -2956,14 +2994,14 @@ namespace koukahyosystem.Controllers
                                     tema_Save_query += "delete FROM m_koukatema " +
                                         "where cSHAIN='" + s_id + "' and cTEMA='0" + no_count + "' and dNENDOU='" + year + "' ;";
                                     insert_values += "('" + s_id + "', '0" + no_count + "', '" + txtArea_temaName_value + "', '" + txtArea_tema_value + "'," +
-                                        " '" + k_id + "','" + year + "'," + item.haiten + ","+ item.taseritsu +"," + item.tokuten + ",1,1),";
+                                        " '" + k_id + "','" + year + "'," + item.haiten + "," + item.taseritsu + "," + item.tokuten + ",1,1,'" + kubunCode + "' ),";
                                 }
 
                             }
                         }
                         insert_values = insert_values.Substring(0, insert_values.Length - 1);
                         tema_Save_query += "insert into m_koukatema" +
-                            "(cSHAIN, cTEMA, sTEMA_NAME, sTEMA, cKAKUNINSHA,dNENDOU,nHAITEN,nTASSEIRITSU,nTOKUTEN,fKANRYOU,fKAKUTEI) " +
+                            "(cSHAIN, cTEMA, sTEMA_NAME, sTEMA, cKAKUNINSHA,dNENDOU,nHAITEN,nTASSEIRITSU,nTOKUTEN,fKANRYOU,fKAKUTEI,cKUBUN) " +
                                                "values" + insert_values + ";";
 
                         if (tema_Save_query != "")
@@ -3053,7 +3091,8 @@ namespace koukahyosystem.Controllers
                         foreach (var item in t_list)
                         {
                             no_count++;
-
+                            txtArea_temaName_value = "";
+                            txtArea_tema_value = "";
                             if (item.tema_name_value == null && item.haiten == null)
                             {
                                 string check_tasukuQuery = "SELECT count(*) as COUNT FROM r_jishitasuku " +
@@ -3079,7 +3118,7 @@ namespace koukahyosystem.Controllers
                                 tema_Save_query += "delete FROM m_koukatema " +
                                     "where cSHAIN='" + s_id + "' and cTEMA='0" + no_count + "' and dNENDOU='" + year + "' ;";
                                 insert_values += "('" + s_id + "', '0" + no_count + "', '', ''," +
-                                    " '','" + year + "',null,null,null,1,0),";
+                                    " '','" + year + "',null,null,null,1,0,'" + kubunCode + "' ),";
                             }
                             else
                             {
@@ -3113,14 +3152,14 @@ namespace koukahyosystem.Controllers
                                 tema_Save_query += "delete FROM m_koukatema " +
                                     "where cSHAIN='" + s_id + "' and cTEMA='0" + no_count + "' and dNENDOU='" + year + "' ;";
                                 insert_values += "('" + s_id + "', '0" + no_count + "', '" + txtArea_temaName_value + "', '" + txtArea_tema_value + "'," +
-                                    " '" + k_id + "','" + year + "'," + item.haiten + ","+ item.taseritsu +"," + item.tokuten + ",1,0),";
+                                    " '" + k_id + "','" + year + "'," + item.haiten + "," + item.taseritsu + "," + item.tokuten + ",1,0,'" + kubunCode + "' ),";
                             }
 
                         }
 
                         insert_values = insert_values.Substring(0, insert_values.Length - 1);
                         tema_Save_query += "insert into m_koukatema" +
-                            "(cSHAIN, cTEMA, sTEMA_NAME, sTEMA, cKAKUNINSHA,dNENDOU,nHAITEN,nTASSEIRITSU,nTOKUTEN,fKANRYOU,fKAKUTEI) " +
+                            "(cSHAIN, cTEMA, sTEMA_NAME, sTEMA, cKAKUNINSHA,dNENDOU,nHAITEN,nTASSEIRITSU,nTOKUTEN,fKANRYOU,fKAKUTEI,cKUBUN) " +
                                                "values" + insert_values + ";";
 
                         if (tema_Save_query != "")
@@ -3150,7 +3189,8 @@ namespace koukahyosystem.Controllers
                         foreach (var item in t_list)
                         {
                             no_count++;
-
+                            txtArea_temaName_value = "";
+                            txtArea_tema_value = "";
                             if (item.tema_name_value == null && item.haiten == null)
                             {
                                 string check_tasukuQuery = "SELECT count(*) as COUNT FROM r_jishitasuku where cSHAIN='" + s_id + "' and cTEMA='0" + no_count + "' and dNENDOU='" + year + "';";
@@ -3174,7 +3214,7 @@ namespace koukahyosystem.Controllers
                                 tema_Save_query += "delete FROM m_koukatema " +
                                     "where cSHAIN='" + s_id + "' and cTEMA='0" + no_count + "' and dNENDOU='" + year + "' ;";
                                 insert_values += "('" + s_id + "', '0" + no_count + "', '', ''," +
-                                    " '','" + year + "',null,null,null,1,1),";
+                                    " '','" + year + "',null,null,null,1,1,'" + kubunCode + "' ),";
                             }
                             else
                             {
@@ -3261,14 +3301,14 @@ namespace koukahyosystem.Controllers
                                 tema_Save_query += "delete FROM m_koukatema " +
                                     "where cSHAIN='" + s_id + "' and cTEMA='0" + no_count + "' and dNENDOU='" + year + "' ;";
                                 insert_values += "('" + s_id + "', '0" + no_count + "', '" + txtArea_temaName_value + "', '" + txtArea_tema_value + "'," +
-                                    " '" + k_id + "','" + year + "'," + item.haiten + ","+item.taseritsu +"," + item.tokuten + ",1,1),";
+                                    " '" + k_id + "','" + year + "'," + item.haiten + "," + item.taseritsu + "," + item.tokuten + ",1,1,'" + kubunCode + "'),";
                             }
 
                         }
 
                         insert_values = insert_values.Substring(0, insert_values.Length - 1);
                         tema_Save_query += "insert into m_koukatema" +
-                            "(cSHAIN, cTEMA, sTEMA_NAME, sTEMA, cKAKUNINSHA,dNENDOU,nHAITEN,nTASSEIRITSU,nTOKUTEN,fKANRYOU,fKAKUTEI) " +
+                            "(cSHAIN, cTEMA, sTEMA_NAME, sTEMA, cKAKUNINSHA,dNENDOU,nHAITEN,nTASSEIRITSU,nTOKUTEN,fKANRYOU,fKAKUTEI,cKUBUN) " +
                                                "values" + insert_values + ";";
 
                         if (tema_Save_query != "")
@@ -3892,12 +3932,14 @@ namespace koukahyosystem.Controllers
         }
         #endregion
 
+
         #region getLimit
         public DataTable getLimit(string kubun,string year)
         {
+            string type_year = get_saitehouhouYear(kubun, year);//20220621 added by lwin mar
             //string limitQuery = "SELECT nUPPERLIMIT,nLOWERLIMIT FROM m_percentage where cKUBUN='"+kubun+"';";
             string limitQuery = "SELECT nUPPERLIMIT,nLOWERLIMIT FROM m_saitenhouhou " +
-                "where cKUBUN='" + kubun + "' and dNENDOU='"+year+"';";
+                "where cKUBUN='" + kubun + "' and dNENDOU='"+ type_year + "';";
 
             System.Data.DataTable dt_limit = new System.Data.DataTable();
             var readData = new SqlDataConnController();

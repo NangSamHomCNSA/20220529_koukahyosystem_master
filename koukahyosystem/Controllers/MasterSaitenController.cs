@@ -588,9 +588,9 @@ namespace koukahyosystem.Controllers
 
                 }
             }
-            catch
+            catch(Exception ex)
             {
-
+                
             }
             return lmd;
         }
@@ -798,10 +798,10 @@ namespace koukahyosystem.Controllers
         {
             DataTable dt = new DataTable();
             string sql = "";
-            sql = " SELECT ms.cSHAIN,cKUBUN FROM m_koukatema mko ";
-            sql += " INNER JOIN m_shain ms on ms.cSHAIN = mko.cSHAIN";
+            sql = " SELECT mko.cKUBUN FROM m_koukatema mko ";//20220627
+            //sql += " INNER JOIN m_shain ms on ms.cSHAIN = mko.cSHAIN";
             sql += " Where mko.dNENDOU = '" + year + "'";
-            sql += " Group by ms.cKUBUN ";
+            sql += " Group by mko.cKUBUN ";
             var readData = new SqlDataConnController();
             dt = readData.ReadData(sql);
             return dt;
