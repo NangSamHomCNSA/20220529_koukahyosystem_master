@@ -187,6 +187,7 @@
     <Compile Include="Controllers\MasterManzokudoController.cs" />
     <Compile Include="Controllers\MasterSaitenController.cs" />
     <Compile Include="Controllers\MasterSoshikaisoController.cs" />
+    <Compile Include="Controllers\MokuhyouKubunkoshinController.cs" />
     <Compile Include="Controllers\OneOnOneController.cs" />
     <Compile Include="Controllers\OneOnOneKakuninHyouController.cs" />
     <Compile Include="Controllers\ResetDataController.cs" />
@@ -223,6 +224,7 @@
     <Compile Include="Models\MasterManzokudoModel.cs" />
     <Compile Include="Models\MasterSaitenModel.cs" />
     <Compile Include="Models\MasterSoshikaiso.cs" />
+    <Compile Include="Models\MokuhyouKubunkoshin.cs" />
     <Compile Include="Models\OneOnOneKakuninHyou.cs" />
     <Compile Include="Models\OneOnOneModel.cs" />
     <Compile Include="Models\SaitenModel.cs" />
@@ -681,6 +683,7 @@
     <Content Include="Views\MasterSaiten\MasterSaiten.cshtml" />
     <Content Include="Views\Master360kijun\MasterBusho.cshtml" />
     <Content Include="Views\OneOnOneKakuninHyou\OneOnOneKakuninHyou.cshtml" />
+    <Content Include="Views\MokuhyouKubunkoshin\MokuhyouKubunkoshin.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

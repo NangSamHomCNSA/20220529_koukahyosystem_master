@@ -280,431 +280,433 @@
 <body>
     @if (Session["isAuthenticated"] != null)
     {
-        <div id='divElement' class="panel panel-info">
+    <div id='divElement' class="panel panel-info">
 
-            @using (Html.BeginForm("TemaKakunin", "KoukaTema"))
-            {
-                <div class="panel-heading text-center" style="background-color: rgb(34, 148, 172); width:100%;">
-                    <div class="container">
-                        <h4 style="color:white">目標設定（100%の力で70%達成できる目標を作る。）</h4>
-                    </div>
+        @using (Html.BeginForm("TemaKakunin", "KoukaTema"))
+        {
+            <div class="panel-heading text-center" style="background-color: rgb(34, 148, 172); width:100%;">
+                <div class="container">
+                    <h4 style="color:white">目標設定（100%の力で70%達成できる目標を作る。）</h4>
+                </div>
+            </div>
+
+            <div class="row" style="margin-top:10px">
+                <div class="col-lg-3 col-sm-4">
+                    <label class="lbl_year">年度</label>
+                    <button id="btnPrevious" name="btnPrevious" value=@Model.year class="btncss btn_year"> < </button>
+                    @Html.DropDownListFor(m => m.year, Model.yearList, new { @id = "year", @class = "dp_year", onchange = "return OnChanged()" })
+                    <button id="btnNext" name="btnNext" value=@Model.year class="btncss btn_year"> > </button>
+                    <button id="btnSearch" name="btnSearch" value="add" style="position: absolute; visibility:hidden">add</button>
                 </div>
 
-                <div class="row" style="margin-top:10px">
-                    <div class="col-lg-3 col-sm-4">
-                        <label class="lbl_year">年度</label>
-                        <button id="btnPrevious" name="btnPrevious" value=@Model.year class="btncss btn_year"> < </button>
-                        @Html.DropDownListFor(m => m.year, Model.yearList, new { @id = "year", @class = "dp_year",onchange = "return OnChanged()" })
-                        <button id="btnNext" name="btnNext" value=@Model.year class="btncss btn_year"> > </button>
-                        <button id="btnSearch" name="btnSearch" value="add" style="position: absolute; visibility:hidden">add</button>
-                    </div>
+                <div class="col-lg-3 col-sm-4" id="div_dropdown">
+                    <label class="lbl_shainName">社員名</label>
+                    @Html.DropDownListFor(m => m.shain_name, Model.shain_list, new { @id = "shain", @class = "dp_shain", onchange = "return OnChangedSelect()", @autofocus = true })
 
-                    <div class="col-lg-3 col-sm-4" id="div_dropdown">
-                        <label class="lbl_shainName">社員名</label>
-                        @Html.DropDownListFor(m => m.shain_name, Model.shain_list, new { @id = "shain",@class="dp_shain",onchange = "return OnChangedSelect()", @autofocus = true })
+                    <button id="btnSelect" name="btnSelect" value="select" style="position: absolute; visibility:hidden">select</button>
+                    <br />
 
-                        <button id="btnSelect" name="btnSelect" value="select" style="position: absolute; visibility:hidden">select</button>
-                        <br />
+                    @if (TempData["master_kaiso"] != null)
+                    {
+                        <label class="lbl_busho">@TempData["master_kaiso"].ToString()</label>
+                    }
 
-                        @if (TempData["master_kaiso"] != null)
-                        {
-                            <label class="lbl_busho">@TempData["master_kaiso"].ToString()</label>
-                        }
-                        
-                        @Html.CheckBoxFor(model => model.check, new { id = "leader_check", style = "margin-left:5px;" })
+                    @Html.CheckBoxFor(model => model.check, new { id = "leader_check", style = "margin-left:5px;" })
 
-                        <button id="btnCheck" name="btnCheck" value="check" style="position: absolute; visibility:hidden">check</button>
-
-                    </div>
-                    
-                    <div class="col-lg-3 col-sm-4">
-                        <label class="div_lbl_leader_haiten">配点</label>
-                        @Html.Label(TempData["master_haiten"].ToString(), new { id = "master_haiten", style = "color:black;font-weight: normal !important;margin-left:5px;" })
-
-                        @if (Model.tensuu_hide == false)
-                        {
-                            <label class="div_lbl_tensuu">点数</label>
-                            @Html.Label(TempData["tensuu"].ToString(), new { style = "color:black;font-weight: normal !important;margin-left:5px;" })
-                        }
-
-                        @Html.TextBoxFor(model => model.shain_name, new { @id = "txt_shainName", style = "width:0px;text-align:center;visibility:hidden" })
-
-                        @if (Model.shain_name != "")
-                        {
-                            <input type="text" id="txt_shain" name="txt_shain" value=@Model.shain_name style="width:0px;text-align:center;visibility:hidden" />
-                        }
-                        else
-                        {
-                            <input type="text" style="width:0px;text-align:center;visibility:hidden" />
-                        }
-                    </div>
-                    
-                    <div class="col-lg-3" id="div_btn">
-
-                        <button type="submit" id="btn_hozone" name="btn_hozone" value="hozone" class="btncss leader_btn_hozone"></button>
-
-                        <button type="submit" id="btn_kakutei" name="btn_kakutei" value="kakutei" class="btncss leader_btn_kakutei"></button>
-
-                        <button type="submit" id="btn_sashimodoshi" name="btn_sashimodoshi" class="btncss leader_btn_sashimodoshi" value="sashimodoshi">差戻し</button>
-
-                    </div>
+                    <button id="btnCheck" name="btnCheck" value="check" style="position: absolute; visibility:hidden">check</button>
 
                 </div>
 
-                <div class="container" style="margin-top:10px;overflow:auto">
-                    <div>
-                        <table id="tema_table" @*class="scroll"*@ style="width:800px" cellpadding="3" align="center">
+                <div class="col-lg-3 col-sm-4">
+                    <label class="div_lbl_leader_haiten">配点</label>
+                    @Html.Label(TempData["master_haiten"].ToString(), new { id = "master_haiten", style = "color:black;font-weight: normal !important;margin-left:5px;" })
 
-                            <tbody>
-                                <tr>
-                                    <td colspan="2"></td>
-                                    <td style="width:70px">
-                                        <label class="lbl_haiten">配点</label>
+                    @if (Model.tensuu_hide == false)
+                    {
+                        <label class="div_lbl_tensuu">点数</label>
+                        @Html.Label(TempData["tensuu"].ToString(), new { style = "color:black;font-weight: normal !important;margin-left:5px;" })
+                    }
+
+                    @Html.TextBoxFor(model => model.shain_name, new { @id = "txt_shainName", style = "width:0px;text-align:center;visibility:hidden" })
+
+                    @if (Model.shain_name != "")
+                    {
+                        <input type="text" id="txt_shain" name="txt_shain" value=@Model.shain_name style="width:0px;text-align:center;visibility:hidden" />
+                    }
+                    else
+                    {
+                        <input type="text" style="width:0px;text-align:center;visibility:hidden" />
+                    }
+                </div>
+
+                <div class="col-lg-3" id="div_btn">
+
+                    <button type="submit" id="btn_hozone" name="btn_hozone" value="hozone" class="btncss leader_btn_hozone"></button>
+
+                    <button type="submit" id="btn_kakutei" name="btn_kakutei" value="kakutei" class="btncss leader_btn_kakutei"></button>
+
+                    <button type="submit" id="btn_sashimodoshi" name="btn_sashimodoshi" class="btncss leader_btn_sashimodoshi" value="sashimodoshi">差戻し</button>
+
+                </div>
+
+            </div>
+
+            <div class="container" style="margin-top:10px;overflow:auto">
+                <div>
+                    <table id="tema_table" @*class="scroll"*@ style="width:800px" cellpadding="3" align="center">
+
+                        <tbody>
+                            <tr>
+                                <td colspan="2"></td>
+                                <td style="width:70px">
+                                    <label class="lbl_haiten">配点</label>
+                                </td>
+                                @if (Model.chk_saitenhouhou == "mokuhyou")
+                                {
+                                    <td width="90px">
+                                        <label class="lbl_tensuu">達成率(％)</label>
                                     </td>
-                                    @if (Model.chk_saitenhouhou == "mokuhyou")
+                                }
+                                <td width="90px">
+                                    <label class="lbl_tensuu">得点</label>
+                                </td>
+                            </tr>
+                            <tr class="no1">
+                                @if (Model.tema_no1_enable == false)
+                                {
+                                    <td rowspan="2">
+                                        <button type="submit" id="temaNumber_1" name="temaNumber_1" value="temaNumber_1" disabled style="border:none;background-color:white;color:#428bca" class="btncss">1</button>
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td rowspan="2">
+                                        <button type="submit" id="temaNumber_1" name="temaNumber_1" value="temaNumber_1" style="border:none;background-color:white;color:#428bca" class="btncss">1</button>
+                                    </td>
+                                }
+                                <td>
+                                    @Html.TextAreaFor(model => model.tema_tableList[0].tema_name_value, new { @class = "text_area1", id = "1temaNameArea", placeholder = "目標１", rows = "5", cols = "30", maxlength = 30, style = "width: 100%;max-width: 100%;min-width: 120px;" })
+                                </td>
+                                <td>
+                                    @if (Model.haiten_disable_1 == true)
                                     {
-                                        <td width="90px">
-                                            <label class="lbl_tensuu">達成率(％)</label>
-                                        </td>
-                                    }
-                                        <td width="90px">
-                                            <label class="lbl_tensuu">得点</label>
-                                        </td>
-                                    </tr>
-                                <tr class="no1">
-                                    @if (Model.tema_no1_enable == false)
-                                    {
-                                        <td rowspan="2">
-                                            <button type="submit" id="temaNumber_1" name="temaNumber_1" value="temaNumber_1" disabled style="border:none;background-color:white;color:#428bca" class="btncss">1</button>
-                                        </td>
+                                        @Html.TextBoxFor(model => model.tema_tableList[0].haiten, new { @id = "1haiten", @onkeypress = "return isSpecialKey(event)", @class = "txtbox_haiten", placeholder = "配点", maxlength = 4, @readonly = "readonly" })
                                     }
                                     else
                                     {
-                                        <td rowspan="2">
-                                            <button type="submit" id="temaNumber_1" name="temaNumber_1" value="temaNumber_1" style="border:none;background-color:white;color:#428bca" class="btncss">1</button>
-                                        </td>
+                                        @Html.TextBoxFor(model => model.tema_tableList[0].haiten, new { @id = "1haiten", @onkeyup = "edValueKeyPress(id)", @onkeypress = "return isSpecialKey(event)", oninput = "numberFunction_1()", @class = "txtbox_haiten", placeholder = "配点", maxlength = 4 })
                                     }
+                                </td>
+                                @if (Model.chk_saitenhouhou == "mokuhyou")
+                                {
                                     <td>
-                                        @Html.TextAreaFor(model => model.tema_tableList[0].tema_name_value, new { @class = "text_area1", id = "1temaNameArea", placeholder = "目標１", rows = "5", cols = "30", maxlength = 30, style = "width: 100%;max-width: 100%;min-width: 120px;" })
+                                        @Html.TextBoxFor(model => model.tema_tableList[0].taseritsu, new
+                                           {
+                                               @class = "txt_tasseiritsu",
+                                               @id = "1txt_tasseiritsu",
+                                               // @type = "number",
+                                               placeholder = "達成率(％)",
+                                               //@readonly = "readonly",
+                                               onkeyup = "edValueKeyPress(id)",
+                                               onkeypress = "isSpecialKey(event)",
+                                               maxlength = 4,
+                                               //oninput = "if (this.value != '') this.style.borderColor= '';if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength)",
+                                               oninput = "edValueKeyPress(id)"
+                                           })
                                     </td>
-                                    <td>
-                                        @if (Model.haiten_disable_1 == true)
-                                        {
-                                            @Html.TextBoxFor(model => model.tema_tableList[0].haiten, new { @id = "1haiten", @onkeypress = "return isSpecialKey(event)", @class = "txtbox_haiten", placeholder = "配点", maxlength = 4, @readonly = "readonly" })
-                                        }
-                                        else
-                                        {
-                                            @Html.TextBoxFor(model => model.tema_tableList[0].haiten, new { @id = "1haiten", @onkeypress = "return isSpecialKey(event)", oninput = "numberFunction_1()", @class = "txtbox_haiten", placeholder = "配点", maxlength = 4 })
-                                        }
-                                    </td>
-                                    @if (Model.chk_saitenhouhou == "mokuhyou")
-                                    {
-                                        <td>
-                                            @Html.TextBoxFor(model => model.tema_tableList[0].taseritsu, new
-                                               {
-                                                   @class = "txt_tasseiritsu",
-                                                   @id = "1txt_tasseiritsu",
-                                                   // @type = "number",
-                                                   placeholder = "達成率(％)",
-                                                   //@readonly = "readonly",
-                                                   onkeyup = "edValueKeyPress(id)",
-                                                   onkeypress = "isSpecialKey(event)",
-                                                   maxlength = 4,
-                                                   //oninput = "if (this.value != '') this.style.borderColor= '';if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength)",
-                                                   oninput = "edValueKeyPress(id)"
-                                               })
-                                        </td>
-                                    }
-                                        <td>
-                                            @Html.TextBoxFor(model => model.tema_tableList[0].tokuten, new { @id = "1tensuu", @class = "txtbox_tensuu", placeholder = "得点", maxlength = 9, @readonly = "readonly", @tabindex = "-1" })
-                                            
-                                        </td>
-                                </tr>
-                                <tr class="no1">
-                                    @if (Model.chk_saitenhouhou == "mokuhyou")
-                                    {
+                                }
+                                <td>
+                                    @Html.TextBoxFor(model => model.tema_tableList[0].tokuten, new { @id = "1tensuu", @class = "txtbox_tensuu", placeholder = "得点", maxlength = 9, @readonly = "readonly", @tabindex = "-1" })
+
+                                </td>
+                            </tr>
+                            <tr class="no1">
+                                @if (Model.chk_saitenhouhou == "mokuhyou")
+                                {
                                     <td colspan="4">
                                         @Html.TextAreaFor(model => model.tema_tableList[0].tema_value, new { @class = "text_area2", id = "1temaArea", placeholder = "目標１のメモ欄", rows = "5", cols = "150", maxlength = 1500, style = "width: 100%;max-width: 100%;" })
                                     </td>
-                                    }
-                                    else
-                                    {
-                                        <td colspan="3">
-                                            @Html.TextAreaFor(model => model.tema_tableList[0].tema_value, new { @class = "text_area2", id = "1temaArea", placeholder = "目標１のメモ欄", rows = "5", cols = "150", maxlength = 1500, style = "width: 100%;max-width: 100%;" })
-                                        </td>
-                                    }
-                                    
-                                </tr>
-                                <tr class="no2">
-                                    @if (Model.tema_no2_enable == false)
-                                    {
-                                        <td rowspan="2">
-                                            <button type="submit" id="temaNumber_2" name="temaNumber_2" value="temaNumber_2" disabled style="border:none;background-color:white;color:#428bca" class="btncss">2</button>
-                                        </td>
-                                    }
-                                    else
-                                    {
-                                        <td rowspan="2">
-                                            <button type="submit" id="temaNumber_2" name="temaNumber_2" value="temaNumber_2" style="border:none;background-color:white;color:#428bca" class="btncss">2</button>
-                                        </td>
-                                    }
-                                    <td>
-                                        @Html.TextAreaFor(model => model.tema_tableList[1].tema_name_value, new { @class = "text_area1", id = "2temaNameArea", placeholder = "目標２", rows = "5", cols = "30", maxlength = 30, style = "width: 100%;max-width: 100%;min-width: 120px;" })
+                                }
+                                else
+                                {
+                                    <td colspan="3">
+                                        @Html.TextAreaFor(model => model.tema_tableList[0].tema_value, new { @class = "text_area2", id = "1temaArea", placeholder = "目標１のメモ欄", rows = "5", cols = "150", maxlength = 1500, style = "width: 100%;max-width: 100%;" })
                                     </td>
-                                    <td>
-                                        @if (Model.haiten_disable_2 == true)
-                                        {
-                                            @Html.TextBoxFor(model => model.tema_tableList[1].haiten, new { @id = "2haiten", @onkeypress = "return isSpecialKey(event)", @class = "txtbox_haiten", placeholder = "配点", maxlength = 4, @readonly = "readonly" })
-                                        }
-                                        else
-                                        {
-                                            @Html.TextBoxFor(model => model.tema_tableList[1].haiten, new { @id = "2haiten", @onkeypress = "return isSpecialKey(event)", oninput = "numberFunction_2()", @class = "txtbox_haiten", placeholder = "配点", maxlength = 4 })
-                                        }
-                                    </td>
-                                    @if (Model.chk_saitenhouhou == "mokuhyou")
-                                    {
-                                        <td>
-                                            @Html.TextBoxFor(model => model.tema_tableList[1].taseritsu, new
-                                               {
-                                                   @class = "txt_tasseiritsu",
-                                                   @id = "2txt_tasseiritsu",
-                                                   // @type = "number",
-                                                   placeholder = "達成率(％)",
-                                                   //@readonly = "readonly",
-                                                   onkeyup = "edValueKeyPress(id)",
-                                                   onkeypress = "isSpecialKey(event)",
-                                                   maxlength = 4,
-                                                   //oninput = "if (this.value != '') this.style.borderColor= '';if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength)",
-                                                   oninput = "edValueKeyPress(id)"
-                                               })
-                                        </td>
-                                    }
-                                        <td>
-                                            @Html.TextBoxFor(model => model.tema_tableList[1].tokuten, new { @id = "2tensuu", @class = "txtbox_tensuu", placeholder = "得点", maxlength = 9, @readonly = "readonly", @tabindex = "-1" })
+                                }
 
-                                        </td>
-                                </tr>
-                                <tr class="no2">
-                                    @if (Model.chk_saitenhouhou == "mokuhyou")
+                            </tr>
+                            <tr class="no2">
+                                @if (Model.tema_no2_enable == false)
+                                {
+                                    <td rowspan="2">
+                                        <button type="submit" id="temaNumber_2" name="temaNumber_2" value="temaNumber_2" disabled style="border:none;background-color:white;color:#428bca" class="btncss">2</button>
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td rowspan="2">
+                                        <button type="submit" id="temaNumber_2" name="temaNumber_2" value="temaNumber_2" style="border:none;background-color:white;color:#428bca" class="btncss">2</button>
+                                    </td>
+                                }
+                                <td>
+                                    @Html.TextAreaFor(model => model.tema_tableList[1].tema_name_value, new { @class = "text_area1", id = "2temaNameArea", placeholder = "目標２", rows = "5", cols = "30", maxlength = 30, style = "width: 100%;max-width: 100%;min-width: 120px;" })
+                                </td>
+                                <td>
+                                    @if (Model.haiten_disable_2 == true)
                                     {
+                                        @Html.TextBoxFor(model => model.tema_tableList[1].haiten, new { @id = "2haiten", @onkeypress = "return isSpecialKey(event)", @class = "txtbox_haiten", placeholder = "配点", maxlength = 4, @readonly = "readonly" })
+                                    }
+                                    else
+                                    {
+                                        @Html.TextBoxFor(model => model.tema_tableList[1].haiten, new { @id = "2haiten", @onkeyup = "edValueKeyPress(id)", @onkeypress = "return isSpecialKey(event)", oninput = "numberFunction_2()", @class = "txtbox_haiten", placeholder = "配点", maxlength = 4 })
+                                    }
+                                </td>
+                                @if (Model.chk_saitenhouhou == "mokuhyou")
+                                {
+                                    <td>
+                                        @Html.TextBoxFor(model => model.tema_tableList[1].taseritsu, new
+                                           {
+                                               @class = "txt_tasseiritsu",
+                                               @id = "2txt_tasseiritsu",
+                                               // @type = "number",
+                                               placeholder = "達成率(％)",
+                                               //@readonly = "readonly",
+                                               onkeyup = "edValueKeyPress(id)",
+                                               onkeypress = "isSpecialKey(event)",
+                                               maxlength = 4,
+                                               //oninput = "if (this.value != '') this.style.borderColor= '';if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength)",
+                                               oninput = "edValueKeyPress(id)"
+                                           })
+                                    </td>
+                                }
+                                <td>
+                                    @Html.TextBoxFor(model => model.tema_tableList[1].tokuten, new { @id = "2tensuu", @class = "txtbox_tensuu", placeholder = "得点", maxlength = 9, @readonly = "readonly", @tabindex = "-1" })
+
+                                </td>
+                            </tr>
+                            <tr class="no2">
+                                @if (Model.chk_saitenhouhou == "mokuhyou")
+                                {
                                     <td colspan="4">
                                         @Html.TextAreaFor(model => model.tema_tableList[1].tema_value, new { @class = "text_area2", id = "2temaArea", placeholder = "目標２のメモ欄", rows = "5", cols = "150", maxlength = 1500, style = "width: 100%;max-width: 100%;" })
                                     </td>
-                                    }
-                                    else
-                                    {
+                                }
+                                else
+                                {
                                     <td colspan="3">
                                         @Html.TextAreaFor(model => model.tema_tableList[1].tema_value, new { @class = "text_area2", id = "2temaArea", placeholder = "目標２のメモ欄", rows = "5", cols = "150", maxlength = 1500, style = "width: 100%;max-width: 100%;" })
                                     </td>
-                                    }
-                                    
-                                </tr>
-                                <tr class="no3">
-                                    @if (Model.tema_no3_enable == false)
+                                }
+
+                            </tr>
+                            <tr class="no3">
+                                @if (Model.tema_no3_enable == false)
+                                {
+                                    <td rowspan="2">
+                                        <button type="submit" id="temaNumber_3" name="temaNumber_3" value="temaNumber_3" disabled style="border:none;background-color:white;color:#428bca" class="btncss">3</button>
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td rowspan="2">
+                                        <button type="submit" id="temaNumber_3" name="temaNumber_3" value="temaNumber_3" style="border:none;background-color:white;color:#428bca" class="btncss">3</button>
+                                    </td>
+                                }
+                                <td>
+                                    @Html.TextAreaFor(model => model.tema_tableList[2].tema_name_value, new { @class = "text_area1", id = "3temaNameArea", placeholder = "目標３", rows = "5", cols = "30", maxlength = 30, style = "width: 100%;max-width: 100%;min-width: 120px;" })
+                                </td>
+                                <td>
+                                    @if (Model.haiten_disable_3 == true)
                                     {
-                                        <td rowspan="2">
-                                            <button type="submit" id="temaNumber_3" name="temaNumber_3" value="temaNumber_3" disabled style="border:none;background-color:white;color:#428bca" class="btncss">3</button>
-                                        </td>
+                                        @Html.TextBoxFor(model => model.tema_tableList[2].haiten, new { @id = "3haiten", @onkeypress = "return isSpecialKey(event)", @class = "txtbox_haiten", placeholder = "配点", maxlength = 4, @readonly = "readonly" })
                                     }
                                     else
                                     {
-                                        <td rowspan="2">
-                                            <button type="submit" id="temaNumber_3" name="temaNumber_3" value="temaNumber_3" style="border:none;background-color:white;color:#428bca" class="btncss">3</button>
-                                        </td>
+                                        @Html.TextBoxFor(model => model.tema_tableList[2].haiten, new { @id = "3haiten", @onkeyup = "edValueKeyPress(id)", @onkeypress = "return isSpecialKey(event)", oninput = "numberFunction_3()", @class = "txtbox_haiten", placeholder = "配点", maxlength = 4 })
                                     }
+                                </td>
+                                @if (Model.chk_saitenhouhou == "mokuhyou")
+                                {
                                     <td>
-                                        @Html.TextAreaFor(model => model.tema_tableList[2].tema_name_value, new { @class = "text_area1", id = "3temaNameArea", placeholder = "目標３", rows = "5", cols = "30", maxlength = 30, style = "width: 100%;max-width: 100%;min-width: 120px;" })
+                                        @Html.TextBoxFor(model => model.tema_tableList[2].taseritsu, new
+                                           {
+                                               @class = "txt_tasseiritsu",
+                                               @id = "3txt_tasseiritsu",
+                                               // @type = "number",
+                                               placeholder = "達成率(％)",
+                                               //@readonly = "readonly",
+                                               onkeyup = "edValueKeyPress(id)",
+                                               onkeypress = "isSpecialKey(event)",
+                                               maxlength = 4,
+                                               //oninput = "if (this.value != '') this.style.borderColor= '';if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength)",
+                                               oninput = "edValueKeyPress(id)"
+                                           })
                                     </td>
-                                    <td>
-                                        @if (Model.haiten_disable_3 == true)
-                                        {
-                                            @Html.TextBoxFor(model => model.tema_tableList[2].haiten, new { @id = "3haiten", @onkeypress = "return isSpecialKey(event)", @class = "txtbox_haiten", placeholder = "配点", maxlength = 4, @readonly = "readonly" })
-                                        }
-                                        else
-                                        {
-                                            @Html.TextBoxFor(model => model.tema_tableList[2].haiten, new { @id = "3haiten", @onkeypress = "return isSpecialKey(event)", oninput = "numberFunction_3()", @class = "txtbox_haiten", placeholder = "配点", maxlength = 4 })
-                                        }
-                                    </td>
-                                    @if (Model.chk_saitenhouhou == "mokuhyou")
-                                    {
-                                        <td>
-                                            @Html.TextBoxFor(model => model.tema_tableList[2].taseritsu, new
-                                               {
-                                                   @class = "txt_tasseiritsu",
-                                                   @id = "3txt_tasseiritsu",
-                                                   // @type = "number",
-                                                   placeholder = "達成率(％)",
-                                                   //@readonly = "readonly",
-                                                   onkeyup = "edValueKeyPress(id)",
-                                                   onkeypress = "isSpecialKey(event)",
-                                                   maxlength = 4,
-                                                   //oninput = "if (this.value != '') this.style.borderColor= '';if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength)",
-                                                   oninput = "edValueKeyPress(id)"
-                                               })
-                                        </td>
-                                    }
-                                        <td>
-                                            @Html.TextBoxFor(model => model.tema_tableList[2].tokuten, new { @id = "3tensuu", @class = "txtbox_tensuu", placeholder = "得点", maxlength = 9, @readonly = "readonly", @tabindex = "-1" })
+                                }
+                                <td>
+                                    @Html.TextBoxFor(model => model.tema_tableList[2].tokuten, new { @id = "3tensuu", @class = "txtbox_tensuu", placeholder = "得点", maxlength = 9, @readonly = "readonly", @tabindex = "-1" })
 
-                                        </td>
-                                </tr>
-                                <tr class="no3">
-                                    @if (Model.chk_saitenhouhou == "mokuhyou")
-                                    {
+                                </td>
+                            </tr>
+                            <tr class="no3">
+                                @if (Model.chk_saitenhouhou == "mokuhyou")
+                                {
                                     <td colspan="4">
                                         @Html.TextAreaFor(model => model.tema_tableList[2].tema_value, new { @class = "text_area2", id = "3temaArea", placeholder = "目標３のメモ欄", rows = "5", cols = "150", maxlength = 1500, style = "width: 100%;max-width: 100%;" })
                                     </td>
-                                    }
-                                    else
-                                    {
+                                }
+                                else
+                                {
                                     <td colspan="3">
                                         @Html.TextAreaFor(model => model.tema_tableList[2].tema_value, new { @class = "text_area2", id = "3temaArea", placeholder = "目標３のメモ欄", rows = "5", cols = "150", maxlength = 1500, style = "width: 100%;max-width: 100%;" })
                                     </td>
-                                    }
-                                    
-                                </tr>
-                                <tr class="no4">
-                                    @if (Model.tema_no4_enable == false)
-                                    {
-                                        <td rowspan="2">
-                                            <button type="submit" id="temaNumber_4" name="temaNumber_4" value="temaNumber_4" disabled style="border:none;background-color:white;color:#428bca" class="btncss">4</button>
-                                        </td>
-                                    }
-                                    else
-                                    {
-                                        <td rowspan="2">
-                                            <button type="submit" id="temaNumber_4" name="temaNumber_4" value="temaNumber_4" style="border:none;background-color:white;color:#428bca" class="btncss">4</button>
-                                        </td>
-                                    }
-                                    <td>
-                                        @Html.TextAreaFor(model => model.tema_tableList[3].tema_name_value, new { @class = "text_area1", id = "4temaNameArea", placeholder = "目標４", rows = "5", cols = "30", maxlength = 30, style = "width: 100%;max-width: 100%;min-width: 120px;" })
-                                    </td>
-                                    <td>
-                                        @if (Model.haiten_disable_4 == true)
-                                        {
-                                            @Html.TextBoxFor(model => model.tema_tableList[3].haiten, new { @id = "4haiten", @onkeypress = "return isSpecialKey(event)", @class = "txtbox_haiten", placeholder = "配点", maxlength = 4, @readonly = "readonly" })
-                                        }
-                                        else
-                                        {
-                                            @Html.TextBoxFor(model => model.tema_tableList[3].haiten, new { @id = "4haiten", @onkeypress = "return isSpecialKey(event)", oninput = "numberFunction_4()", @class = "txtbox_haiten", placeholder = "配点", maxlength = 4 })
-                                        }
-                                    </td>
-                                    @if (Model.chk_saitenhouhou == "mokuhyou")
-                                    {
-                                        <td>
-                                            @Html.TextBoxFor(model => model.tema_tableList[3].taseritsu, new
-                                               {
-                                                   @class = "txt_tasseiritsu",
-                                                   @id = "4txt_tasseiritsu",
-                                                   // @type = "number",
-                                                   placeholder = "達成率(％)",
-                                                   //@readonly = "readonly",
-                                                   onkeyup = "edValueKeyPress(id)",
-                                                   onkeypress = "isSpecialKey(event)",
-                                                   maxlength = 4,
-                                                   //oninput = "if (this.value != '') this.style.borderColor= '';if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength)",
-                                                   oninput = "edValueKeyPress(id)"
-                                               })
-                                        </td>
-                                    }
-                                        <td>
-                                            @Html.TextBoxFor(model => model.tema_tableList[3].tokuten, new { @id = "4tensuu", @class = "txtbox_tensuu", placeholder = "得点", maxlength = 9, @readonly = "readonly", @tabindex = "-1" })
-                                            
-                                        </td>
-                                </tr>
-                                <tr class="no4">
-                                    @if (Model.chk_saitenhouhou == "mokuhyou")
-                                    {
-                                    <td colspan="4">
-                                        @Html.TextAreaFor(model => model.tema_tableList[3].tema_value, new { @class = "text_area2", id = "4temaArea", placeholder = "目標４のメモ欄", rows = "5", cols = "150", maxlength = 1500, style = "width: 100%;max-width: 100%;" })
-                                    </td>
-                                    }
-                                    else
-                                    {
-                                    <td colspan="3">
-                                        @Html.TextAreaFor(model => model.tema_tableList[3].tema_value, new { @class = "text_area2", id = "4temaArea", placeholder = "目標４のメモ欄", rows = "5", cols = "150", maxlength = 1500, style = "width: 100%;max-width: 100%;" })
-                                    </td>
-                                    }
-                                    
-                                </tr>
-                                <tr class="no5">
-                                    @if (Model.tema_no5_enable == false)
-                                    {
-                                        <td rowspan="2">
-                                            <button type="submit" id="temaNumber_5" name="temaNumber_5" value="temaNumber_5" disabled style="border:none;background-color:white;color:#428bca" class="btncss">5</button>
-                                        </td>
-                                    }
-                                    else
-                                    {
-                                        <td rowspan="2">
-                                            <button type="submit" id="temaNumber_5" name="temaNumber_5" value="temaNumber_5" style="border:none;background-color:white;color:#428bca" class="btncss">5</button>
-                                        </td>
-                                    }
-                                    <td>
-                                        @Html.TextAreaFor(model => model.tema_tableList[4].tema_name_value, new { @class = "text_area1", id = "5temaNameArea", placeholder = "目標５", rows = "5", cols = "30", maxlength = 30, style = "width: 100%;max-width: 100%;min-width: 120px;" })
-                                    </td>
-                                    <td>
-                                        @if (Model.haiten_disable_5 == true)
-                                        {
-                                            @Html.TextBoxFor(model => model.tema_tableList[4].haiten, new { @id = "5haiten", @onkeypress = "return isSpecialKey(event)", @class = "txtbox_haiten", placeholder = "配点", maxlength = 4, @readonly = "readonly" })
-                                        }
-                                        else
-                                        {
-                                            @Html.TextBoxFor(model => model.tema_tableList[4].haiten, new { @id = "5haiten", @onkeypress = "return isSpecialKey(event)", oninput = "numberFunction_5()", @class = "txtbox_haiten", placeholder = "配点", maxlength = 4 })
-                                        }
-                                    </td>
-                                    @if (Model.chk_saitenhouhou == "mokuhyou")
-                                    {
-                                        <td>
-                                            @Html.TextBoxFor(model => model.tema_tableList[4].taseritsu, new
-                                               {
-                                                   @class = "txt_tasseiritsu",
-                                                   @id = "5txt_tasseiritsu",
-                                                   // @type = "number",
-                                                   placeholder = "達成率(％)",
-                                                   //@readonly = "readonly",
-                                                   onkeyup = "edValueKeyPress(id)",
-                                                   onkeypress = "isSpecialKey(event)",
-                                                   maxlength = 4,
-                                                   //oninput = "if (this.value != '') this.style.borderColor= '';if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength)",
-                                                   oninput = "edValueKeyPress(id)"
-                                               })
-                                        </td>
-                                    }
-                                        <td>
-                                            @Html.TextBoxFor(model => model.tema_tableList[4].tokuten, new { @id = "5tensuu", @class = "txtbox_tensuu", placeholder = "得点", maxlength = 9, @readonly = "readonly", @tabindex = "-1" })
+                                }
 
-                                        </td>
-                                </tr>
-                                <tr class="no5">
-                                    @if (Model.chk_saitenhouhou == "mokuhyou")
-                                    {
-                                    <td colspan="4">
-                                        @Html.TextAreaFor(model => model.tema_tableList[4].tema_value, new { @class = "text_area2", id = "5temaArea", placeholder = "目標５のメモ欄", rows = "5", cols = "150", maxlength = 1500, style = "width: 100%;max-width: 100%;" })
+                            </tr>
+                            <tr class="no4">
+                                @if (Model.tema_no4_enable == false)
+                                {
+                                    <td rowspan="2">
+                                        <button type="submit" id="temaNumber_4" name="temaNumber_4" value="temaNumber_4" disabled style="border:none;background-color:white;color:#428bca" class="btncss">4</button>
                                     </td>
+                                }
+                                else
+                                {
+                                    <td rowspan="2">
+                                        <button type="submit" id="temaNumber_4" name="temaNumber_4" value="temaNumber_4" style="border:none;background-color:white;color:#428bca" class="btncss">4</button>
+                                    </td>
+                                }
+                                <td>
+                                    @Html.TextAreaFor(model => model.tema_tableList[3].tema_name_value, new { @class = "text_area1", id = "4temaNameArea", placeholder = "目標４", rows = "5", cols = "30", maxlength = 30, style = "width: 100%;max-width: 100%;min-width: 120px;" })
+                                </td>
+                                <td>
+                                    @if (Model.haiten_disable_4 == true)
+                                    {
+                                        @Html.TextBoxFor(model => model.tema_tableList[3].haiten, new { @id = "4haiten", @onkeypress = "return isSpecialKey(event)", @class = "txtbox_haiten", placeholder = "配点", maxlength = 4, @readonly = "readonly" })
                                     }
                                     else
                                     {
+                                        @Html.TextBoxFor(model => model.tema_tableList[3].haiten, new { @id = "4haiten", @onkeyup = "edValueKeyPress(id)", @onkeypress = "return isSpecialKey(event)", oninput = "numberFunction_4()", @class = "txtbox_haiten", placeholder = "配点", maxlength = 4 })
+                                    }
+                                </td>
+                                @if (Model.chk_saitenhouhou == "mokuhyou")
+                                {
+                                    <td>
+                                        @Html.TextBoxFor(model => model.tema_tableList[3].taseritsu, new
+                                           {
+                                               @class = "txt_tasseiritsu",
+                                               @id = "4txt_tasseiritsu",
+                                               // @type = "number",
+                                               placeholder = "達成率(％)",
+                                               //@readonly = "readonly",
+                                               onkeyup = "edValueKeyPress(id)",
+                                               onkeypress = "isSpecialKey(event)",
+                                               maxlength = 4,
+                                               //oninput = "if (this.value != '') this.style.borderColor= '';if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength)",
+                                               oninput = "edValueKeyPress(id)"
+                                           })
+                                    </td>
+                                }
+                                <td>
+                                    @Html.TextBoxFor(model => model.tema_tableList[3].tokuten, new { @id = "4tensuu", @class = "txtbox_tensuu", placeholder = "得点", maxlength = 9, @readonly = "readonly", @tabindex = "-1" })
+
+                                </td>
+                            </tr>
+                            <tr class="no4">
+                                @if (Model.chk_saitenhouhou == "mokuhyou")
+                                {
+                                    <td colspan="4">
+                                        @Html.TextAreaFor(model => model.tema_tableList[3].tema_value, new { @class = "text_area2", id = "4temaArea", placeholder = "目標４のメモ欄", rows = "5", cols = "150", maxlength = 1500, style = "width: 100%;max-width: 100%;" })
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td colspan="3">
+                                        @Html.TextAreaFor(model => model.tema_tableList[3].tema_value, new { @class = "text_area2", id = "4temaArea", placeholder = "目標４のメモ欄", rows = "5", cols = "150", maxlength = 1500, style = "width: 100%;max-width: 100%;" })
+                                    </td>
+                                }
+
+                            </tr>
+                            <tr class="no5">
+                                @if (Model.tema_no5_enable == false)
+                                {
+                                    <td rowspan="2">
+                                        <button type="submit" id="temaNumber_5" name="temaNumber_5" value="temaNumber_5" disabled style="border:none;background-color:white;color:#428bca" class="btncss">5</button>
+                                    </td>
+                                }
+                                else
+                                {
+                                    <td rowspan="2">
+                                        <button type="submit" id="temaNumber_5" name="temaNumber_5" value="temaNumber_5" style="border:none;background-color:white;color:#428bca" class="btncss">5</button>
+                                    </td>
+                                }
+                                <td>
+                                    @Html.TextAreaFor(model => model.tema_tableList[4].tema_name_value, new { @class = "text_area1", id = "5temaNameArea", placeholder = "目標５", rows = "5", cols = "30", maxlength = 30, style = "width: 100%;max-width: 100%;min-width: 120px;" })
+                                </td>
+                                <td>
+                                    @if (Model.haiten_disable_5 == true)
+                                    {
+                                        @Html.TextBoxFor(model => model.tema_tableList[4].haiten, new { @id = "5haiten", @onkeypress = "return isSpecialKey(event)", @class = "txtbox_haiten", placeholder = "配点", maxlength = 4, @readonly = "readonly" })
+                                    }
+                                    else
+                                    {
+                                        @Html.TextBoxFor(model => model.tema_tableList[4].haiten, new { @id = "5haiten", @onkeyup = "edValueKeyPress(id)", @onkeypress = "return isSpecialKey(event)", oninput = "numberFunction_5()", @class = "txtbox_haiten", placeholder = "配点", maxlength = 4 })
+                                    }
+                                </td>
+                                @if (Model.chk_saitenhouhou == "mokuhyou")
+                                {
+                                    <td>
+                                        @Html.TextBoxFor(model => model.tema_tableList[4].taseritsu, new
+                                           {
+                                               @class = "txt_tasseiritsu",
+                                               @id = "5txt_tasseiritsu",
+                                               // @type = "number",
+                                               placeholder = "達成率(％)",
+                                               //@readonly = "readonly",
+                                               onkeyup = "edValueKeyPress(id)",
+                                               onkeypress = "isSpecialKey(event)",
+                                               maxlength = 4,
+                                               //oninput = "if (this.value != '') this.style.borderColor= '';if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength)",
+                                               oninput = "edValueKeyPress(id)"
+                                           })
+                                    </td>
+                                }
+                                <td>
+                                    @Html.TextBoxFor(model => model.tema_tableList[4].tokuten, new { @id = "5tensuu", @class = "txtbox_tensuu", placeholder = "得点", maxlength = 9, @readonly = "readonly", @tabindex = "-1" })
+
+                                </td>
+                            </tr>
+                            <tr class="no5">
+                                @if (Model.chk_saitenhouhou == "mokuhyou")
+                                {
+                                    <td colspan="4">
+                                        @Html.TextAreaFor(model => model.tema_tableList[4].tema_value, new { @class = "text_area2", id = "5temaArea", placeholder = "目標５のメモ欄", rows = "5", cols = "150", maxlength = 1500, style = "width: 100%;max-width: 100%;" })
+                                    </td>
+                                }
+                                else
+                                {
                                     <td colspan="3">
                                         @Html.TextAreaFor(model => model.tema_tableList[4].tema_value, new { @class = "text_area2", id = "5temaArea", placeholder = "目標５のメモ欄", rows = "5", cols = "150", maxlength = 1500, style = "width: 100%;max-width: 100%;" })
                                     </td>
-                                    }
-                                    
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                                }
+
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
+            </div>
 
-                @*if (Model.kubun_code == "04" || Model.kubun_code == "05")
+            @*if (Model.kubun_code == "04" || Model.kubun_code == "05")
+            {
+                if (Model.lbl_kakutei == false)
                 {
-                    if (Model.lbl_kakutei == false)
-                    {
-                        <label class="lbl_leader_kakutei">※希望配点はリーダー面談後、配点が確定します。</label>
-                    }
-                }*@
-            }
-        </div>
+                    <label class="lbl_leader_kakutei">※希望配点はリーダー面談後、配点が確定します。</label>
+                }
+            }*@
+            <input type="hidden" id="upper" name="upper" value=@Model.upper_value>
+            <input type="hidden" id="lower" name="lower" value=@Model.lower_value>
+        }
+    </div>
     }
     <script src="@Url.Content("~/Scripts/jquery-1.12.4.min.js")"></script>
     <script>
@@ -2345,39 +2347,59 @@
                 return true;
             }
         }
-
+        function roundDown(number, decimals) {
+            decimals = decimals || 0;
+            return (Math.floor(number * Math.pow(10, decimals)) / Math.pow(10, decimals));
+        }
         function edValueKeyPress(id) {
-
-            var tas_val = document.getElementById(id).value;
+           
+            var totaltensu = 0.00;
+            var row_no = id.substr(0, 1);
+          //  var tas_val = document.getElementById(id).value;
+            var tas_val = document.getElementById(row_no + 'txt_tasseiritsu').value;
             tas_val = tas_val.replace("%", "");
-
+            var upper = document.getElementById('upper').value;
+            var lower = document.getElementById('lower').value
+            var haitem = document.getElementById(row_no+'haiten').value;
             if (isNaN(tas_val)) {
-                document.getElementById(id).value = "";
+                document.getElementById(row_no + 'txt_tasseiritsu').value = "";
                 return false;
             }
+            if (haitem.trim().length > 0 && tas_val.trim().length > 0 && upper.trim().length > 0 && lower.trim().length > 0) {
 
-            if (tas_val.trim().length > 0) {
                 if (tas_val > 100) {
                     tas_val = 100;
                 }
-                document.getElementById(id).value = tas_val + "%";
+                totaltensu = haitem * (tas_val - lower) / (upper - lower);
+                document.getElementById(row_no + 'txt_tasseiritsu').value = tas_val + "%";
+                document.getElementById(row_no + 'tensuu').value = roundDown(totaltensu, 2).toFixed(2);
+                
             }
+            //if (tas_val.trim().length > 0) {
+            //    if (tas_val > 100) {
+            //        tas_val = 100;
+            //    }
+            //    document.getElementById(id).value = tas_val + "%";
+            //}
             else {
                 if (tas_val > 100) {
                     tas_val = "100";
                 }
-                document.getElementById(id).value = "";
+                document.getElementById(row_no + 'tensuu').value = "";
                 if (tas_val.trim().length == 0) {
-                    document.getElementById(id).value = "";
+                    document.getElementById(row_no + 'txt_tasseiritsu').value = "";
                 }
                 if (tas_val.trim().length > 0) {
-                    document.getElementById(id).value = tas_val + "%";
+                    document.getElementById(row_no + 'txt_tasseiritsu').value = tas_val + "%";
                 }
             }
 
-            //if (tas_val.trim().length > 0) {
-            //    $(document.getElementById(id).style.css('borderColor', '');
-            //}
+            if(tas_val.trim().length > 0) {
+                $(document.getElementById(row_no + 'txt_tasseiritsu')).css('borderColor', '');
+            }
+            if (haitem.trim().length > 0) {
+                $(document.getElementById(row_no +'haiten')).css('borderColor', '');
+            }
         }
 
         function numberFunction_1() {
