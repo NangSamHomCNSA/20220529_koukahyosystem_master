@@ -467,7 +467,8 @@ namespace koukahyosystem.Controllers
                         mdl.cTEMA = temacode;
                     }
                     // start 20210503 added
-                    string shainkubun = getkubun(mdl.cShain);//20210503 added
+                    //string shainkubun = getkubun(mdl.cShain);//20210503 added
+                    string shainkubun = get_kubun(logid);//zee
                     mdl.rdo_komoku = getkomoku(Year, shainkubun);//20210503 added
                     if (mdl.rdo_komoku == "2")
                     {
@@ -765,6 +766,7 @@ namespace koukahyosystem.Controllers
                         }
                         if (percent == true)
                         {
+                            kubun = get_kubun(checklogid);//zee
                             roundstring = get_haifu_rounding(Year, kubun, total);
 
                             // total = get_tensu(Year, lcode);
@@ -833,6 +835,7 @@ namespace koukahyosystem.Controllers
                         string deletequery = string.Empty;
                         //string shaincode = Request["cShain"];
                         string kcode = Session["kubun"].ToString();
+                        kubun = get_kubun(checklogid);//zee
                         string pre_year_kakunin = "";
                         if (Session["kubun"].ToString() != "01")
                         {
@@ -853,7 +856,7 @@ namespace koukahyosystem.Controllers
                         }
 
                         string allinsertquery = "";
-                        allinsertquery += "INSERT INTO r_jishitasuku(cKAKUNINSHA,cSHAIN,cTEMA,c_TK_TEMA,s_TK_TEMA,dNENDOU,dKAISHI,dKANHYOU,fNENKAN,nHAITEN,nTASSEIRITSU,nTENSUU,sMEMO,fKANRYO,fKAKUTEI) VALUES  ";
+                        allinsertquery += "INSERT INTO r_jishitasuku(cKAKUNINSHA,cSHAIN,cTEMA,c_TK_TEMA,s_TK_TEMA,dNENDOU,dKAISHI,dKANHYOU,fNENKAN,nHAITEN,nTASSEIRITSU,nTENSUU,sMEMO,fKANRYO,fKAKUTEI,cKUBUN) VALUES  ";
 
                         //  allinsertquery += "INSERT INTO r_jishitasuku(cKAKUNINSHA,cSHAIN,cTEMA,c_TK_TEMA,s_TK_TEMA,dKIKAN,nTASSEIRITSU,sMEMO,fKANRYO,fKAKUTEI) VALUES  ";
                         foreach (var item in model.temalist)
@@ -1088,7 +1091,7 @@ namespace koukahyosystem.Controllers
                                 string valuestring = string.Empty;
 
 
-                                insertquery += "('" + kakunin + "','" + Session["logincode"] + "','" + selecttemacode + "', '" + temacode + "', '" + temaname + "', '" + year + "'," + startdate + "," + enddate + ", '" + chkyear + "'," + htenvalue + "," + result + "," + tensuvalue + ",'" + memo + "','" + kanhyouvalue + "'," + kakuteivalue + "),";
+                                insertquery += "('" + kakunin + "','" + Session["logincode"] + "','" + selecttemacode + "', '" + temacode + "', '" + temaname + "', '" + year + "'," + startdate + "," + enddate + ", '" + chkyear + "'," + htenvalue + "," + result + "," + tensuvalue + ",'" + memo + "','" + kanhyouvalue + "'," + kakuteivalue + "," + kubun + "),";
 
                                 i++;
                             }
@@ -1111,7 +1114,8 @@ namespace koukahyosystem.Controllers
                                                    "nTENSUU = VALUES(nTENSUU)," +
                                                    "sMEMO = VALUES(sMEMO)," +
                                                    "fKANRYO = VALUES(fKANRYO)," +
-                                                   "fKAKUTEI = VALUES(fKAKUTEI);";
+                                                   "fKAKUTEI = VALUES(fKAKUTEI)," +
+                                                   "cKUBUN=VALUES(cKUBUN);";
 
 
                             var insertdata = new SqlDataConnController();
@@ -1183,7 +1187,7 @@ namespace koukahyosystem.Controllers
                         string selecttensu = string.Empty;
                         string reportercode = string.Empty;
                         string allinsertquery = "";
-                        allinsertquery += "INSERT INTO r_jishitasuku(cKAKUNINSHA,cSHAIN,cTEMA,c_TK_TEMA,s_TK_TEMA,dNENDOU,dKAISHI,dKANHYOU,fNENKAN,nHAITEN,nTASSEIRITSU,nTENSUU,sMEMO,fKANRYO,fKAKUTEI) VALUES  ";
+                        allinsertquery += "INSERT INTO r_jishitasuku(cKAKUNINSHA,cSHAIN,cTEMA,c_TK_TEMA,s_TK_TEMA,dNENDOU,dKAISHI,dKANHYOU,fNENKAN,nHAITEN,nTASSEIRITSU,nTENSUU,sMEMO,fKANRYO,fKAKUTEI,cKUBUN) VALUES  ";
                         foreach (var item in model.temalist)
                         {
                             if (Number == saveid)
@@ -1393,10 +1397,11 @@ namespace koukahyosystem.Controllers
                                    // memo = encode_utf8(memo);
                                     if (Number == saveid)
                                     {
+                                        kubun = get_kubun(checklogid);
                                         selectsaveid = temacode;
                                         selectresult = result;
                                         selecttensu = tensuvalue;
-                                        insertquery += "('" + kakunin + "','" + Session["logincode"] + "','" + selecttemacode + "', '" + temacode + "', '" + temaname + "', '" + year + "'," + startdate + "," + enddate + ",'" + chkyear + "'," + haitenvalue + "," + result + "," + tensuvalue + ",'" + memo + "','" + kanhyouvalue + "'," + kakuteivalue + "),";
+                                        insertquery += "('" + kakunin + "','" + Session["logincode"] + "','" + selecttemacode + "', '" + temacode + "', '" + temaname + "', '" + year + "'," + startdate + "," + enddate + ",'" + chkyear + "'," + haitenvalue + "," + result + "," + tensuvalue + ",'" + memo + "','" + kanhyouvalue + "'," + kakuteivalue + "," + kubun + "),";
 
                                     }
 
@@ -1423,7 +1428,8 @@ namespace koukahyosystem.Controllers
                                                    "nTENSUU = VALUES(nTENSUU)," +
                                                    "sMEMO = VALUES(sMEMO)," +
                                                    "fKANRYO = VALUES(fKANRYO)," +
-                                                   "fKAKUTEI = VALUES(fKAKUTEI);";
+                                                   "fKAKUTEI = VALUES(fKAKUTEI)," +
+                                                   "cKUBUN = VALUES(cKUBUN);";
 
                         var insertdata = new SqlDataConnController();
                         Boolean f_update = insertdata.inputsql(allinsertquery);
@@ -1659,6 +1665,16 @@ namespace koukahyosystem.Controllers
 
 
                     mdl.kubun = kubun;
+                    
+                    //string nodata = "";
+                    //nodata += "select * from r_jishitasuku where dNENDOU='" + Year + "' and  ";
+                    //DataTable dt_nodata = new DataTable();
+                    //var sql = new SqlDataConnController();
+                    //dt_nodata = sql.ReadData(nodata);
+                    //if (dt_nodata.Rows.Count < 0)
+                    //{
+                    //    kubun = nodatainjishi(Year);//20220704
+                    //}
                     // start 20210503 added
                     mdl.rdo_komoku = getkomoku(Year, kubun);
                     if (mdl.rdo_komoku == "2")
@@ -1671,6 +1687,7 @@ namespace koukahyosystem.Controllers
                     }
                     // end 20210503 added
                     #region update tensu_cal 20210524
+                    kubun = get_kubun(checklogid);//zee
                     DataTable dt_limit = new DataTable();
                     dt_limit = upper_lower_value(Year, kubun);
                     foreach (DataRow Lsdr in dt_limit.Rows)
@@ -1721,6 +1738,26 @@ namespace koukahyosystem.Controllers
                 return RedirectToRoute("Default", new { controller = "Default", action = "Login" });
             }
 
+        }
+        #endregion
+
+        #region nojishidata
+        public string nodatainjishi(string year)
+        {
+            string jishi = "";
+            string ko_kubun = "";
+            jishi += "select cKUBUN from m_koukatema where dNENDOU='"+year+ "' and fKANRYOU='1' and fKAKUTEI='1' ";
+            DataTable dt_jishi = new DataTable();
+            var sql_jishi = new SqlDataConnController();
+            dt_jishi = sql_jishi.ReadData(jishi);
+            if (dt_jishi.Rows.Count > 0)
+            {
+                foreach(DataRow dr in dt_jishi.Rows)
+                {
+                    ko_kubun = dr["cKUBUN"].ToString();
+                }
+            }
+            return ko_kubun;
         }
         #endregion
         #region Post TaskKuakunin(確認画面)
@@ -2031,9 +2068,9 @@ namespace koukahyosystem.Controllers
                         string deletequery = string.Empty;
                         string shaincode = Request["cShain"];
                         string kcode = Session["kubun"].ToString();
-
+                        kcode = get_kubun(shaincode);//zee
                         string allinsertquery = "";
-                        allinsertquery += "INSERT INTO r_jishitasuku(cKAKUNINSHA,cSHAIN,cTEMA,c_TK_TEMA,s_TK_TEMA,dNENDOU,dKAISHI,dKANHYOU,fNENKAN,nHAITEN,nTASSEIRITSU,nTENSUU,sMEMO,fKANRYO,fKAKUTEI) VALUES  ";
+                        allinsertquery += "INSERT INTO r_jishitasuku(cKAKUNINSHA,cSHAIN,cTEMA,c_TK_TEMA,s_TK_TEMA,dNENDOU,dKAISHI,dKANHYOU,fNENKAN,nHAITEN,nTASSEIRITSU,nTENSUU,sMEMO,fKANRYO,fKAKUTEI,cKUBUN) VALUES  ";
 
                         //  allinsertquery += "INSERT INTO r_jishitasuku(cKAKUNINSHA,cSHAIN,cTEMA,c_TK_TEMA,s_TK_TEMA,dKIKAN,nTASSEIRITSU,sMEMO,fKANRYO,fKAKUTEI) VALUES  ";
                         foreach (var item in model.kakunintemalist)
@@ -2237,7 +2274,7 @@ namespace koukahyosystem.Controllers
                                 string valuestring = string.Empty;
 
 
-                                insertquery += "('" + kakunin + "','" + shaincode + "','" + selecttemacode + "', '" + temacode + "', '" + temaname + "', '" + year + "'," + startdate + "," + enddate + ",'" + chkyear + "'," + htenvalue + "," + result + "," + tensuvalue + ",'" + memo + "','" + kanhyouvalue + "'," + kakuteivalue + "),";
+                                insertquery += "('" + kakunin + "','" + shaincode + "','" + selecttemacode + "', '" + temacode + "', '" + temaname + "', '" + year + "'," + startdate + "," + enddate + ",'" + chkyear + "'," + htenvalue + "," + result + "," + tensuvalue + ",'" + memo + "','" + kanhyouvalue + "'," + kakuteivalue + "," + kcode + "),";
 
 
                                 //insertquery += "(null,'" + Session["logincode"] + "','" + selecttemacode + "', '" + temacode + "', '" + temaname + "', '" + year + "'," + htenvalue + "," + result + "," + tensuvalue + ",'" + memo + "','" + kanhyouvalue + "'," + kakuteivalue + "),";
@@ -2263,7 +2300,8 @@ namespace koukahyosystem.Controllers
                                                    "nTENSUU = VALUES(nTENSUU)," +
                                                    "sMEMO = VALUES(sMEMO)," +
                                                    "fKANRYO = VALUES(fKANRYO)," +
-                                                   "fKAKUTEI = VALUES(fKAKUTEI);";
+                                                   "fKAKUTEI = VALUES(fKAKUTEI)," +
+                                                   "cKUBUN=VALUES(cKUBUN);";
 
 
                             var insertdata = new SqlDataConnController();
@@ -2307,10 +2345,11 @@ namespace koukahyosystem.Controllers
                         string selectresult = string.Empty;
                         string selecttensu = string.Empty;
                         string shaincode = Request["cShain"];
-                        string haifu_kubun = getkubun(shaincode);
+                        //string haifu_kubun = getkubun(shaincode);
+                        string haifu_kubun = get_kubun(shaincode);
                         string reportercode = string.Empty;
                         string allinsertquery = "";
-                        allinsertquery += "INSERT INTO r_jishitasuku(cKAKUNINSHA,cSHAIN,cTEMA,c_TK_TEMA,s_TK_TEMA,dNENDOU,dKAISHI,dKANHYOU,fNENKAN,nHAITEN,nTASSEIRITSU,nTENSUU,sMEMO,fKANRYO,fKAKUTEI) VALUES  ";
+                        allinsertquery += "INSERT INTO r_jishitasuku(cKAKUNINSHA,cSHAIN,cTEMA,c_TK_TEMA,s_TK_TEMA,dNENDOU,dKAISHI,dKANHYOU,fNENKAN,nHAITEN,nTASSEIRITSU,nTENSUU,sMEMO,fKANRYO,fKAKUTEI,cKUBUN) VALUES  ";
                         foreach (var item in model.kakunintemalist)
                         {
                             if (Number == saveid)
@@ -2468,7 +2507,7 @@ namespace koukahyosystem.Controllers
                                         selectsaveid = temacode;
                                         selectresult = result;
                                         selecttensu = tensuvalue;
-                                        insertquery += "('" + kakunin + "','" + shaincode + "','" + selecttemacode + "', '" + temacode + "', '" + temaname + "', '" + year + "'," + startdate + "," + enddate + ",'" + chkyear + "'," + haitenvalue + "," + result + "," + tensuvalue + ",'" + memo + "','" + kanhyouvalue + "'," + kakuteivalue + "),";
+                                        insertquery += "('" + kakunin + "','" + shaincode + "','" + selecttemacode + "', '" + temacode + "', '" + temaname + "', '" + year + "'," + startdate + "," + enddate + ",'" + chkyear + "'," + haitenvalue + "," + result + "," + tensuvalue + ",'" + memo + "','" + kanhyouvalue + "'," + kakuteivalue + "," + haifu_kubun + "),";
                                     }
 
                                 }
@@ -2492,7 +2531,8 @@ namespace koukahyosystem.Controllers
                                                    "nTENSUU = VALUES(nTENSUU)," +
                                                    "sMEMO = VALUES(sMEMO)," +
                                                    "fKANRYO = VALUES(fKANRYO)," +
-                                                   "fKAKUTEI = VALUES(fKAKUTEI);";
+                                                   "fKAKUTEI = VALUES(fKAKUTEI)," +
+                                                   "cKUBUN=VALUES(cKUBUN);";
 
                         var insertdata = new SqlDataConnController();
                         Boolean f_update = insertdata.inputsql(allinsertquery);
@@ -2731,7 +2771,8 @@ namespace koukahyosystem.Controllers
 
                 }
                 // start 20210503 added
-                string shainkubun = getkubun(mdl.cShain);//20210503 added
+                //string shainkubun = getkubun(mdl.cShain);//20210503 added
+                string shainkubun = get_kubun(mdl.cShain);//zee
                 mdl.rdo_komoku = getkomoku(Year, shainkubun);//20210503 added
                 if (mdl.rdo_komoku == "2")
                 {
@@ -3045,6 +3086,7 @@ namespace koukahyosystem.Controllers
                     dt = mysqlcontroller.ReadData(sqlStr);
 
                     #region update tensu cal 20210524
+                    kubun = get_kubun(logid);//zee
                     DataTable dt_upper_lower = upper_lower_value(Year, kubun);
                     foreach (DataRow dr in dt_upper_lower.Rows)
                     {
@@ -3227,6 +3269,7 @@ namespace koukahyosystem.Controllers
                 string sqlhaitem = string.Empty;
                 string haitem_condition = "";
                 DataSet dt_haitem = new DataSet();
+                kubunlogin = get_kubun(logid);//zee
                 string flag = getkomoku(Year, kubunlogin);//20210506
                 if (flag == "2" && (upper_value != "" && lower_value != ""))
                 {
@@ -3443,7 +3486,8 @@ namespace koukahyosystem.Controllers
                 if (firstcode != "" && firstcode != null)
                 {
                     shaincount = 1;
-                    haifu_kubun = getkubun(firstcode);
+                    //haifu_kubun = getkubun(firstcode);
+                    haifu_kubun = get_kubun(firstcode);//zee
                 }
 
                 if (shaincount == 1)
@@ -3635,7 +3679,8 @@ namespace koukahyosystem.Controllers
                 string sqlhaitem = string.Empty;
                 string haitem_condition = "";
                 DataSet dt_haitem = new DataSet();
-                string shainkubun = getkubun(logid);//20210503 added
+                //string shainkubun = getkubun(logid);//20210503 added
+                string shainkubun = get_kubun(logid);
                 string flag = getkomoku(Year, shainkubun);//20210506
                 if (flag == "2" && (upper_value != "" && lower_value != ""))
                 {
@@ -4499,6 +4544,36 @@ namespace koukahyosystem.Controllers
         {
             string str = HttpUtility.UrlDecode(s);
             return str;
+        }
+        #endregion
+
+        #region getkubun
+        public string get_kubun(string shainID)
+        {
+            string kubun_id = "";
+            string kubunquery = "SELECT cKUBUN FROM m_koukatema where cSHAIN='" + shainID + "' and dNENDOU='" + Year + "' and fKANRYOU='1' and fKAKUTEI='1'  group by cSHAIN ;";
+
+            System.Data.DataTable dt_kubun = new System.Data.DataTable();
+            var readData = new SqlDataConnController();
+            dt_kubun = readData.ReadData(kubunquery);
+            if (dt_kubun.Rows.Count > 0)
+            {
+                foreach (DataRow dr_kubun in dt_kubun.Rows)
+                {
+                    kubun_id = dr_kubun["cKUBUN"].ToString();
+                }
+            }
+            else
+            {
+                dt_kubun.Clear();
+                string kubunQuery = "SELECT cKUBUN FROM m_shain where cSHAIN='" + shainID + "' ;";
+                dt_kubun = readData.ReadData(kubunQuery);
+                foreach (DataRow dr_kubun in dt_kubun.Rows)
+                {
+                    kubun_id = dr_kubun["cKUBUN"].ToString();
+                }
+            }
+            return kubun_id;
         }
         #endregion
     }

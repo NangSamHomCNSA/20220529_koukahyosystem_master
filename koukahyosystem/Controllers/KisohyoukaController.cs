@@ -2506,7 +2506,7 @@ namespace koukahyosystem.Controllers
                     {
                         pg_year = year;
                     }
-
+                    kubun_code = get_kubun(logid);//get login shain kubun
                     chk_currentyrQue = mkisoCheck(kubun_code, pg_year);
                     if (chk_currentyrQue == 0)
                     {
