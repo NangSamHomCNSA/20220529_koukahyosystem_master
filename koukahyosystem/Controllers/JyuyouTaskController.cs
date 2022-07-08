@@ -1401,7 +1401,7 @@ namespace koukahyosystem.Controllers
                                         selectsaveid = temacode;
                                         selectresult = result;
                                         selecttensu = tensuvalue;
-                                        insertquery += "('" + kakunin + "','" + Session["logincode"] + "','" + selecttemacode + "', '" + temacode + "', '" + temaname + "', '" + year + "'," + startdate + "," + enddate + ",'" + chkyear + "'," + haitenvalue + "," + result + "," + tensuvalue + ",'" + memo + "','" + kanhyouvalue + "'," + kakuteivalue + "," + kubun + "),";
+                                        insertquery += "('" + kakunin + "','" + Session["logincode"] + "','" + selecttemacode + "', '" + temacode + "', '" + temaname + "', '" + year + "'," + startdate + "," + enddate + ",'" + chkyear + "'," + haitenvalue + "," + result + "," + tensuvalue + ",'" + memo + "','" + kanhyouvalue + "'," + kakuteivalue + ",'" + kubun + "'),";
 
                                     }
 
