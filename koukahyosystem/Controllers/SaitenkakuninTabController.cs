@@ -111,14 +111,27 @@ namespace koukahyosystem.Controllers
         public string get_kubun(string login_id)//sqlconn
         {
             string kubun = string.Empty;
-            string kubunQuery = "select cKUBUN from m_shain where cSHAIN='" + login_id + "';";
+            string hyoukakubun = "SELECT cKUBUN FROM r_hyouka WHERE cIRAISHA='" + login_id + "' and dNENDOU='" + pg_year + "' group by cIRAISHA ;";//20220718zee
 
             System.Data.DataTable dt_kubun = new System.Data.DataTable();
             var readData = new SqlDataConnController();
-            dt_kubun = readData.ReadData(kubunQuery);
-            foreach (DataRow dr_kubun in dt_kubun.Rows)
+            dt_kubun = readData.ReadData(hyoukakubun);
+            if (dt_kubun.Rows.Count > 0)
             {
-                kubun = dr_kubun["cKUBUN"].ToString();
+                foreach (DataRow dr_kubun in dt_kubun.Rows)
+                {
+                    kubun = dr_kubun["cKUBUN"].ToString();
+                }
+            }
+            else
+            {
+                dt_kubun.Clear();
+                string kubunQuery = "select cKUBUN from m_shain where cSHAIN='" + login_id + "';";
+                dt_kubun = readData.ReadData(kubunQuery);
+                foreach(DataRow dr in dt_kubun.Rows)
+                {
+                    kubun = dr["cKUBUN"].ToString();
+                }
             }
             
             return kubun;
