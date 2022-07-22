@@ -17,6 +17,8 @@ namespace koukahyosystem.Controllers
         DataTable tasseiritsudt = new DataTable();
         DataTable mokuhyoudt = new DataTable();
         DataTable jissitaskdt = new DataTable();
+        DataTable rkisodt = new DataTable();
+        DataTable rhyoukadt = new DataTable();
         decimal nupperlimit = 0;
         decimal nlowerlimit = 0;
 
@@ -526,17 +528,17 @@ namespace koukahyosystem.Controllers
                 sqlstr += " , ifnull(dt_3dan.total, '') as tokuten_kiso ";
                 /* sqlstr += " , ifnull(TRUNCATE(dt_kouka.total,2), '') as tokuten_mokuhyo ";*/
                 //sqlstr += " ,ifnull(if (msai.fMOKUHYOU = 1 ,mkou.ten , if (msai.fJUYOUTASK = 1 ,ifnull(TRUNCATE(dt_kouka.total, 0), 0), 0)),'')  as tokuten_mokuhyo ";
-                sqlstr += " , ifnull(TRUNCATE(dt_hyouka.total,2), '') as tokuten_hyouka ";
+                sqlstr += " , max(ifnull(TRUNCATE(dt_hyouka.dai1,2), '')) as dai1 ";
+                sqlstr += " , max(ifnull(TRUNCATE(dt_hyouka.dai2,2), '')) as dai2 ";
+                sqlstr += " , max(ifnull(TRUNCATE(dt_hyouka.dai3,2), '')) as dai3 ";
+                sqlstr += " , max(ifnull(TRUNCATE(dt_hyouka.dai4,2), '')) as dai4 ";
                 sqlstr += " , ifnull(mhai.nHAIFU, '') as jyouikouka ";
                 sqlstr += " , '' as '合計' ";
                 sqlstr += " FROM ";
                 sqlstr += " m_shain ms ";
                 sqlstr += " LEFT JOIN ";
                 //360評価
-                sqlstr += " (SELECT ";
-                sqlstr += " mh.cIRAISHA ";
-                sqlstr += ",if (SUM(dai1 + dai2 + dai3 + dai4) = 0, null, SUM(dai1 + dai2 + dai3 + dai4)) as total ";
-                sqlstr += "FROM ";
+                
                 sqlstr += "(SELECT ";
                 sqlstr += " mh.cIRAISHA ";
                 sqlstr += " , if (mh.nJIKI = 1, if (SUM(mh.fHYOUKA) = count(mh.cIRAISHA), TRUNCATE(SUM(mh.nRANKTEN) / 10, 2), 0), 0) as dai1 ";
@@ -546,12 +548,14 @@ namespace koukahyosystem.Controllers
                 sqlstr += " , mh.cKOUMOKU ";
                 sqlstr += " FROM ";
                 sqlstr += " r_hyouka  mh ";
+                sqlstr += " Where mh.dNENDOU = '" + curYear + "'";
+                sqlstr += " GROUP BY mh.cIRAISHA,mh.nJIKI ) dt_hyouka on dt_hyouka.cIRAISHA = ms.cSHAIN ";
                 // sqlstr += " INNER JOIN m_shitsumon mshi on mshi.cKOUMOKU = mh.cKOUMOKU and mshi.cKUBUN = mh.cKUBUN AND mshi.dNENDOU ='"+ shitsumonYear + "'";
                 //sqlstr += " Where ";
                 //sqlstr += " (mshi.fDELE IS NULL or mshi.fDELE = 0) ";
-              
-                sqlstr += " Where mh.dNENDOU = '" + curYear + "'";
-                sqlstr += " GROUP BY mh.cIRAISHA,mh.nJIKI ) mh  GROUP BY mh.cIRAISHA) dt_hyouka on dt_hyouka.cIRAISHA = ms.cSHAIN ";
+
+                //sqlstr += " Where mh.dNENDOU = '" + curYear + "'";
+                //sqlstr += " GROUP BY mh.cIRAISHA,mh.nJIKI )  dt_hyouka on dt_hyouka.cIRAISHA = ms.cSHAIN ";//zee
                 /*sqlstr += " LEFT JOIN( ";
                 //考課表
                 sqlstr += " SELECT ";
@@ -588,6 +592,7 @@ namespace koukahyosystem.Controllers
                 sqlstr += "LEFT JOIN (select rjou.cSHAIN,rjou.nJOUI from r_jouikoka rjou where dNENDOU='" + curYear + "' group by rjou.cSHAIN) dtrjoui on dtrjoui.cSHAIN=ms.cSHAIN ";//zee
                 sqlstr += "  Where ms.cHYOUKASHA ='"+ cShain + "'";
                 sqlstr += "  and mhai.dNENDOU =  '" + curYear + "'";
+                sqlstr += "  group by ms.cSHAIN  ";
                 sqlstr += "  Order by ms.cSHAIN";
                 DataTable dt = new DataTable();
                 readData = new SqlDataConnController();
@@ -621,8 +626,32 @@ namespace koukahyosystem.Controllers
                     string haifu_mokuhyo = "";
                     string haifu_hyouka = "";
                     string haifu_kokaten = "";
-                   
-                    DataRow[] rowDr = haifudt.Select("cKUBUN = '" + shain_kubun + "'");
+                    string mokukubun = "";
+                    DataRow[] rowhyouka = rhyoukadt.Select("cIRAISHA = '" + shuseishain + "' ");
+                    if (rhyoukadt.Rows.Count > 0)
+                    {
+                        foreach (DataRow hyoukadr in rowhyouka)
+                        {
+                            mokukubun = hyoukadr["cKUBUN"].ToString();
+                        }
+                    }
+                    DataRow[] rowkiso = rkisodt.Select("cSHAIN = '" + shuseishain + "' ");
+                    if (rkisodt.Rows.Count > 0)
+                    {
+                        foreach(DataRow kisodr in rowkiso)
+                        {
+                            mokukubun = kisodr["cKUBUN"].ToString();
+                        }
+                    }
+                    DataRow[] rowjishi = mokuhyoudt.Select("cSHAIN = '" + shuseishain + "' ");
+                    if (mokuhyoudt.Rows.Count > 0)
+                    {
+                        foreach (DataRow mokudr in rowjishi)
+                        {
+                            mokukubun = mokudr["cKUBUN"].ToString();
+                        }
+                    }
+                    DataRow[] rowDr = haifudt.Select("cKUBUN = '" + mokukubun + "' ");
                     if (haifudt.Rows.Count > 0)
                     {
                        
@@ -654,7 +683,7 @@ namespace koukahyosystem.Controllers
 
                     }
 
-                    kubun = shain_kubun;
+                    kubun = mokukubun;
                     Year = curYear;
                     string kisotenVal =  findFullMarkKiso();
                     int hyoukaManten = findhyouka();
@@ -720,20 +749,89 @@ namespace koukahyosystem.Controllers
 
                     //360度評価計算
                     d_val = 0;
-                    if (dr["tokuten_hyouka"].ToString() != "")
+                    string sql = "";
+                    int jiki1 = 0;
+                    int jiki2 = 0;
+                    int jiki3 = 0;
+                    int jiki4 = 0;
+                    sql += "select count(fHYOUKA) as fHYOUKA ,nJIKI ";
+                    sql += "from r_hyouka  ";
+                    sql += "where fHYOUKA=1 and dNENDOU='" + curYear + "' and cIRAISHA='" + shuseishain + "' ";
+                    sql += "group by nJIKI ";
+                    var database = new SqlDataConnController();
+                    DataTable dt_fhyouka = new DataTable();
+                    dt_fhyouka = database.ReadData(sql);
+                    if (dt_fhyouka.Rows.Count > 0)
                     {
-                        d_val = RoundingNum(dr["tokuten_hyouka"].ToString());
+                        DataRow[] drhyou1 = dt_fhyouka.Select("nJIKI='1' ");
+                        foreach (DataRow dr_hyouka1 in drhyou1)
+                        {
+                            jiki1 = Convert.ToInt32(dr_hyouka1["fHYOUKA"].ToString());
+                        }
+                        DataRow[] drhyou2 = dt_fhyouka.Select("nJIKI='2' ");
+                        foreach(DataRow dr_hyouka2 in drhyou2)
+                        {
+                            jiki2 = Convert.ToInt32(dr_hyouka2["fHYOUKA"].ToString());
+                        }
+                        DataRow[] drhyou3 = dt_fhyouka.Select("nJIKI='3' ");
+                        foreach(DataRow dr_hyouka3 in drhyou3)
+                        {
+                            jiki3 = Convert.ToInt32(dr_hyouka3["fHYOUKA"].ToString());
+                        }
+                        DataRow[] drhyou4 = dt_fhyouka.Select("nJIKI='4' ");
+                        foreach (DataRow dr_hyouka4 in drhyou4)
+                        {
+                            jiki4 = Convert.ToInt32(dr_hyouka4["fHYOUKA"].ToString());
+                        }
                     }
-                    if (hyoukaManten.ToString() != "" && dr["tokuten_hyouka"].ToString() != "")
+                    int total_komoku = countKOUMOKU();
+                    double dai_value = 0;
+                    if (total_komoku == jiki1)
                     {
-                        int tokuten_hyouka = Decimal.ToInt32(d_val);                       
+                        if (dr["dai1"].ToString() != "")
+                        {
+                            string dai1 = dr["dai1"].ToString();
+                            dai_value = Convert.ToDouble(dai1);
+                        }
+                    }
+                    if (total_komoku == jiki2)
+                    {
+                        if (dr["dai2"].ToString() != "")
+                        {
+                            string dai2 = dr["dai2"].ToString();
+                            dai_value += Convert.ToDouble(dai2);
+                        }
+                    }
+                    if (total_komoku == jiki3)
+                    {
+                        if (dr["dai3"].ToString() != "")
+                        {
+                            string dai3 = dr["dai3"].ToString();
+                            dai_value += Convert.ToDouble(dai3);
+                        }
+                    }
+                    if (total_komoku == jiki4)
+                    {
+                        if (dr["dai4"].ToString() != "")
+                        {
+                            string dai4 = dr["dai4"].ToString();
+                            dai_value += Convert.ToDouble(dai4);
+                        }
+                    }
+                    if (dai_value.ToString() != "")
+                    {
+                        d_val = RoundingNum(dai_value.ToString());
+                    }
+                    if (hyoukaManten.ToString() != "" && dai_value.ToString() != "" && dai_value != 0)
+                    {
+                        int tokuten_hyouka = Decimal.ToInt32(d_val);
                         infodr1["360度評価"] = tokuten_hyouka.ToString() + " / " + hyoukaManten.ToString();
                         tokuten += tokuten_hyouka;
                         tokuten_manten += hyoukaManten;
                     }
 
-                    if (hyoukaManten.ToString() != "" && dr["tokuten_hyouka"].ToString() != "" && haifu_hyouka != "")
-                    {                                                
+                    if (hyoukaManten.ToString() != "" && dai_value.ToString() != "" && haifu_hyouka != "" && dai_value != 0)
+                    {
                         decimal toku_hyoka = Decimal.ToInt32(d_val);
                         decimal haihyouka = decimal.Parse(haifu_hyouka);
 
@@ -799,6 +897,42 @@ namespace koukahyosystem.Controllers
 
         }
 
+        public int countKOUMOKU()
+        {
+            int yearval = int.Parse(Year);
+            int startyear = 0;
+            int endyear = 0;
+            int cKOU = 0;
+
+            DataRow[] rowDr = hyoukadt.Select("dNENDOU  = '" + yearval + "' AND cKUBUN='" + kubun + "'");
+            if (rowDr.Length > 0)
+            {
+                cKOU = int.Parse(rowDr[0]["cKOUMOKU"].ToString());
+            }
+            else
+            {
+                rowDr = hyoukadt.Select(" cKUBUN='" + kubun + "'");
+                int count_Koumoku = 0;
+                foreach (DataRow dr in rowDr)
+                {
+                    endyear = int.Parse(dr["dNENDOU"].ToString());
+                    cKOU = int.Parse(dr["cKOUMOKU"].ToString());
+                    if (startyear != 0 && endyear != 0)
+                    {
+                        if (startyear < yearval && yearval < endyear)
+                        {
+                            //cKOU = int.Parse(dr["cKOUMOKU"].ToString());
+                            cKOU = count_Koumoku;
+                            break;
+                        }
+                    }
+                    startyear = endyear;
+                    count_Koumoku = (cKOU);
+                }
+
+            }
+            return cKOU;
+        }
         public DataTable KanrishaShukeiData()
         {
             DataTable syukeidt = new DataTable();
@@ -885,18 +1019,18 @@ namespace koukahyosystem.Controllers
                 sqlstr += " , mk.cKUBUN as cKUBUN";
                 sqlstr += " , mk.sKUBUN as sKUBUN";
                 sqlstr += ",dtrjoui.nJOUI as njoui";//zee
-                sqlstr += " , ifnull(dt_3dan.total, '') as tokuten_kiso ";               
-                sqlstr += " , ifnull(TRUNCATE(dt_hyouka.total,2), '') as tokuten_hyouka ";
+                sqlstr += " , ifnull(dt_3dan.total, '') as tokuten_kiso ";
+                sqlstr += " , max(ifnull(TRUNCATE(dt_hyouka.dai1,2), '')) as dai1 ";
+                sqlstr += " , max(ifnull(TRUNCATE(dt_hyouka.dai2,2), '')) as dai2 ";
+                sqlstr += " , max(ifnull(TRUNCATE(dt_hyouka.dai3,2), '')) as dai3 ";
+                sqlstr += " , max(ifnull(TRUNCATE(dt_hyouka.dai4,2), '')) as dai4 ";
                 sqlstr += " , ifnull(mhai.nHAIFU, '') as jyouikouka ";
                 sqlstr += " , '' as '合計' ";
                 sqlstr += " FROM ";
                 sqlstr += " m_shain ms ";
                 sqlstr += " LEFT JOIN ";
                 //360評価
-                sqlstr += " (SELECT ";
-                sqlstr += " mh.cIRAISHA ";
-                sqlstr += ",if (SUM(dai1 + dai2 + dai3 + dai4) = 0, null, SUM(dai1 + dai2 + dai3 + dai4)) as total ";
-                sqlstr += "FROM ";
+                
                 sqlstr += "(SELECT ";
                 sqlstr += " mh.cIRAISHA ";
                 sqlstr += " , if (mh.nJIKI = 1, if (SUM(mh.fHYOUKA) = count(mh.cIRAISHA), TRUNCATE(SUM(mh.nRANKTEN) / 10, 2), 0), 0) as dai1 ";
@@ -907,7 +1041,7 @@ namespace koukahyosystem.Controllers
                 sqlstr += " FROM ";
                 sqlstr += " r_hyouka  mh ";                
                 sqlstr += " Where mh.dNENDOU = '" + curYear + "'";
-                sqlstr += " GROUP BY mh.cIRAISHA,mh.nJIKI ) mh  GROUP BY mh.cIRAISHA) dt_hyouka on dt_hyouka.cIRAISHA = ms.cSHAIN ";                
+                sqlstr += " GROUP BY mh.cIRAISHA,mh.nJIKI ) dt_hyouka on dt_hyouka.cIRAISHA = ms.cSHAIN ";                
                 sqlstr += " INNER JOIN(SELECT cKUBUN, fMOKUHYOU, fJUYOUTASK FROM m_saitenhouhou where dNENDOU = '" + saitenhouhouYear + "') msai on msai.cKUBUN = ms.cKUBUN ";
                 //基礎評価
                 sqlstr += " LEFT JOIN( ";
@@ -927,6 +1061,7 @@ namespace koukahyosystem.Controllers
                 sqlstr += "LEFT JOIN (select rjou.cSHAIN,rjou.nJOUI from r_jouikoka rjou where dNENDOU='" + curYear + "' group by rjou.cSHAIN) dtrjoui on dtrjoui.cSHAIN=ms.cSHAIN ";//zee
                 sqlstr += "  Where mhai.dNENDOU =  '" + curYear + "'";
                 //sqlstr += "  Where ms.cHYOUKASHA ='" + cShain + "'";
+                sqlstr += "  group by ms.cSHAIN  ";
                 sqlstr += "  Order by mk.cKUBUN,mbs.cBUSHO,mg.cGROUP,ms.cSHAIN";
                 DataTable dt = new DataTable();
                 readData = new SqlDataConnController();
@@ -964,7 +1099,32 @@ namespace koukahyosystem.Controllers
                     string haifu_mokuhyo = "";
                     string haifu_hyouka = "";
                     string kokatenManten = "";
-                    DataRow[] rowDr = haifudt.Select("cKUBUN = '" + shain_kubun + "'");
+                    string mokukubun = "";
+                    DataRow[] rowhyouka = rhyoukadt.Select("cIRAISHA = '" + shain + "' ");
+                    if (rhyoukadt.Rows.Count > 0)
+                    {
+                        foreach (DataRow hyoukadr in rowhyouka)
+                        {
+                            mokukubun = hyoukadr["cKUBUN"].ToString();
+                        }
+                    }
+                    DataRow[] rowkiso = rkisodt.Select("cSHAIN = '" + shain + "' ");
+                    if (rkisodt.Rows.Count > 0)
+                    {
+                        foreach (DataRow kisodr in rowkiso)
+                        {
+                            mokukubun = kisodr["cKUBUN"].ToString();
+                        }
+                    }
+                    DataRow[] rowjishi = mokuhyoudt.Select("cSHAIN = '" + shain + "' ");
+                    if (mokuhyoudt.Rows.Count > 0)
+                    {
+                        foreach (DataRow mokudr in rowjishi)
+                        {
+                            mokukubun = mokudr["cKUBUN"].ToString();
+                        }
+                    }
+                    DataRow[] rowDr = haifudt.Select("cKUBUN = '" + mokukubun + "'");
                     if (haifudt.Rows.Count > 0)
                     {
                         foreach (DataRow haifudr in rowDr)
@@ -993,7 +1153,7 @@ namespace koukahyosystem.Controllers
                     }
 
                     Year = curYear;
-                    kubun = shain_kubun;
+                    kubun = mokukubun;
                     int kisotenVal = Findkiso();
                     int hyoukaten = Findhyouka();
 
@@ -1053,18 +1213,88 @@ namespace koukahyosystem.Controllers
 
                     //360度評価計算
                     d_val = 0;
-                    if (dr["tokuten_hyouka"].ToString() != "")
+                    string sql = "";
+                    int jiki1 = 0;
+                    int jiki2 = 0;
+                    int jiki3 = 0;
+                    int jiki4 = 0;
+                    sql += "select count(fHYOUKA) as fHYOUKA ,nJIKI ";
+                    sql += "from r_hyouka  ";
+                    sql += "where fHYOUKA=1 and dNENDOU='" + curYear + "' and cIRAISHA='" + shain + "' ";
+                    sql += "group by nJIKI ";
+                    var database = new SqlDataConnController();
+                    DataTable dt_fhyouka = new DataTable();
+                    dt_fhyouka = database.ReadData(sql);
+                    if (dt_fhyouka.Rows.Count > 0)
                     {
-                        d_val = RoundingNum(dr["tokuten_hyouka"].ToString());
+                        DataRow[] drhyou1 = dt_fhyouka.Select("nJIKI='1' ");
+                        foreach (DataRow dr_hyouka1 in drhyou1)
+                        {
+                            jiki1 = Convert.ToInt32(dr_hyouka1["fHYOUKA"].ToString());
+                        }
+                        DataRow[] drhyou2 = dt_fhyouka.Select("nJIKI='2' ");
+                        foreach (DataRow dr_hyouka2 in drhyou2)
+                        {
+                            jiki2 = Convert.ToInt32(dr_hyouka2["fHYOUKA"].ToString());
+                        }
+                        DataRow[] drhyou3 = dt_fhyouka.Select("nJIKI='3' ");
+                        foreach (DataRow dr_hyouka3 in drhyou3)
+                        {
+                            jiki3 = Convert.ToInt32(dr_hyouka3["fHYOUKA"].ToString());
+                        }
+                        DataRow[] drhyou4 = dt_fhyouka.Select("nJIKI='4' ");
+                        foreach (DataRow dr_hyouka4 in drhyou4)
+                        {
+                            jiki4 = Convert.ToInt32(dr_hyouka4["fHYOUKA"].ToString());
+                        }
                     }
-                    if (hyoukaten != 0 && dr["tokuten_hyouka"].ToString() != "")
+                    int total_komoku = countKOUMOKU();
+                    double dai_value = 0;
+                    if (total_komoku == jiki1)
+                    {
+                        if (dr["dai1"].ToString() != "")
+                        {
+                            string dai1 = dr["dai1"].ToString();
+                            dai_value = Convert.ToDouble(dai1);
+                        }
+                    }
+                    if (total_komoku == jiki2)
+                    {
+                        if (dr["dai2"].ToString() != "")
+                        {
+                            string dai2 = dr["dai2"].ToString();
+                            dai_value += Convert.ToDouble(dai2);
+                        }
+                    }
+                    if (total_komoku == jiki3)
+                    {
+                        if (dr["dai3"].ToString() != "")
+                        {
+                            string dai3 = dr["dai3"].ToString();
+                            dai_value += Convert.ToDouble(dai3);
+                        }
+                    }
+                    if (total_komoku == jiki4)
+                    {
+                        if (dr["dai4"].ToString() != "")
+                        {
+                            string dai4 = dr["dai4"].ToString();
+                            dai_value += Convert.ToDouble(dai4);
+                        }
+                    }
+                    if (dai_value.ToString() != "")
+                    {
+                        d_val = RoundingNum(dai_value.ToString());
+                    }
+                    
+                    if (hyoukaten != 0 && dai_value.ToString() != "" && dai_value != 0)
                     {
                         int tokuten_hyouka = Decimal.ToInt32(d_val);
                         infodr1["360度評価"] = tokuten_hyouka.ToString() + " / " + hyoukaten.ToString();
                         tokuten += tokuten_hyouka;
                         tokuten_manten += hyoukaten;
                     }
-                    if (hyoukaten != 0 && dr["tokuten_hyouka"].ToString() != "" && haifu_hyouka != "")
+                    if (hyoukaten != 0 && dai_value.ToString() != "" && haifu_hyouka != "" && dai_value != 0)
                     {
                         decimal toku_hyoka = Decimal.ToInt32(d_val);
                         decimal haihyouka = decimal.Parse(haifu_hyouka);
@@ -1232,10 +1462,11 @@ namespace koukahyosystem.Controllers
             tasseiritsudt = readData.ReadData(sqlstr);
 
             sqlstr = "";
-            sqlstr += " SELECT cSHAIN,dNENDOU,ifnull( nHAITEN,'') as nHAITEN, ifnull(nTASSEIRITSU,'') as nTASSEIRITSU ";
+            sqlstr += " SELECT cSHAIN,cKUBUN,dNENDOU,ifnull( nHAITEN,'') as nHAITEN, ifnull(nTASSEIRITSU,'') as nTASSEIRITSU ";
             sqlstr += " FROM m_koukatema";
             sqlstr += " where dNENDOU = '" + yearval + "'";
             sqlstr += " AND fKANRYOU = 1 and fKAKUTEI = 1";
+            sqlstr += " GROUP BY cSHAIN ";
             DataTable dt = new DataTable();
             readData = new SqlDataConnController();
             mokuhyoudt = readData.ReadData(sqlstr);
@@ -1243,7 +1474,7 @@ namespace koukahyosystem.Controllers
             //目標設定の得点
             sqlstr = "";
             sqlstr += " SELECT ";
-            sqlstr += " cSHAIN,dNENDOU, ifnull(nHAITEN,'') as nHAITEN ,ifnull(nTASSEIRITSU,'') as nTASSEIRITSU ";
+            sqlstr += " cSHAIN,cKUBUN,dNENDOU, ifnull(nHAITEN,'') as nHAITEN ,ifnull(nTASSEIRITSU,'') as nTASSEIRITSU ";
             sqlstr += " FROM ";
             sqlstr += " r_jishitasuku rj ";
             sqlstr += " WHERE ";
@@ -1252,6 +1483,26 @@ namespace koukahyosystem.Controllers
             sqlstr += " and rj.fKAKUTEI = 1 ";               
             readData = new SqlDataConnController();
             jissitaskdt = readData.ReadData(sqlstr);
+
+            //基礎的な
+            sqlstr = "";
+            sqlstr += "SELECT cSHAIN,dNENDOU,cKUBUN ";
+            sqlstr += "FROM r_kiso rki ";
+            sqlstr += "WHERE dNENDOU ='" + yearval + "' ";
+            sqlstr += "and rki.fKAKUTEI = 1 ";
+            sqlstr += "GROUP BY cSHAIN ";
+            readData = new SqlDataConnController();
+            rkisodt = readData.ReadData(sqlstr);
+
+            //360評価
+            sqlstr = "";
+            sqlstr += "SELECT cIRAISHA,cKUBUN,dNENDOU ";
+            sqlstr += "FROM r_hyouka rk ";
+            sqlstr += "WHERE dNENDOU = '" + yearval + "' ";
+            sqlstr += "and rk.fHYOUKA = 1 ";
+            sqlstr += "GROUP BY cIRAISHA ";
+            readData = new SqlDataConnController();
+            rhyoukadt = readData.ReadData(sqlstr);
         }
         private string findkoukahyo(string cshain)
         {
@@ -1327,7 +1578,8 @@ namespace koukahyosystem.Controllers
         private DataTable ReadHyouka()
         {
             string sql = "";
-            sql = " SELECT (dNENDOU),cKUBUN,ifnull((count(cKOUMOKU)* 5 * 4),0) as hyoukaten ";
+            sql = " SELECT (dNENDOU),cKUBUN,ifnull((count(cKOUMOKU)* 5 * 4),0) as hyoukaten, ";//5markforeachkomoku and 4semester
+            sql += " count(cKOUMOKU)*10 as cKOUMOKU ";//10person for each semester
             sql += " FROM m_shitsumon Where( fDELE = 0 or fDELE IS NULL )";
             sql += " GROUP BY dNENDOU,cKUBUN ";
             sql += " order by dNENDOU ASC; ";
@@ -1353,12 +1605,12 @@ namespace koukahyosystem.Controllers
                 foreach (DataRow dr in rowDr)
                 {
                     endyear = int.Parse(dr["dNENDOU"].ToString());
-                    hyoukaten = int.Parse(dr["hyoukaten"].ToString());
+                    hyoukaten = int.Parse(rowDr[0]["hyoukaten"].ToString());
                     if (startyear != 0 && endyear != 0)
                     {
                         if (startyear < yearval && yearval < endyear)
                         {
-                            hyoukaten = int.Parse(dr["hyoukaten"].ToString());
+                            hyoukaten = int.Parse(rowDr[0]["hyoukaten"].ToString());
                             break;
                         }
                     }
@@ -1530,9 +1782,10 @@ namespace koukahyosystem.Controllers
             int qut_year = 0;
             string sql = "";
             sql = " SELECT distinct(mkt.dNENDO) FROM m_kokaten mkt ";
-            sql += " INNER JOIN m_kubun mk on mk.cKUBUN = mkt.cKUBUN ";
-            sql += " Where  (mk.fDELETE = 0 or mk.fDELETE IS NULL) ";
-            sql += " GROUP BY dNENDO, mk.cKUBUN ";
+            //sql += " INNER JOIN m_kubun mk on mk.cKUBUN = mkt.cKUBUN ";//20220706zee
+            //sql += " Where  (mk.fDELETE = 0 or mk.fDELETE IS NULL) ";
+            //sql += " GROUP BY dNENDO, mk.cKUBUN ";
+            sql += " GROUP BY mkt.dNENDO, mkt.cKUBUN ";//20220706zee
             sql += " order by mkt.dNENDO ASC; ";
             var readData = new SqlDataConnController();
             DataTable dt = readData.ReadData(sql);
@@ -1547,22 +1800,22 @@ namespace koukahyosystem.Controllers
             }
             else
             {
-                foreach (DataRow dr in dt.Rows)
-                {
-                    endyear = int.Parse(dr["dNENDO"].ToString());
-                    if (startyear != 0 && endyear != 0)
-                    {
-                        if (startyear < selectedyear && selectedyear < endyear)
-                        {
-                            break;
-                        }
-                    }
-                    startyear = endyear;
-                }
-                if (startyear != 0 && endyear != 0)
-                {
-                    qut_year = startyear;
-                }
+                //foreach (DataRow dr in dt.Rows)
+                //{
+                //    endyear = int.Parse(dr["dNENDO"].ToString());
+                //    if (startyear != 0 && endyear != 0)
+                //    {
+                //        if (startyear < selectedyear && selectedyear < endyear)
+                //        {
+                //            break;
+                //        }
+                //    }
+                //    startyear = endyear;
+                //}
+                //if (startyear != 0 && endyear != 0)
+                //{
+                //    qut_year = startyear;
+                //}
             }
 
             return qut_year;
